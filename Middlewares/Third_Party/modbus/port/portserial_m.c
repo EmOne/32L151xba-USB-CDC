@@ -50,7 +50,7 @@ static UART_HandleTypeDef *serial;
 /* ----------------------- static functions ---------------------------------*/
 static void prvvUARTTxReadyISR(void);
 static void prvvUARTRxISR(void);
-static rt_err_t serial_rx_ind(rt_device_t dev, rt_size_t size);
+//static rt_err_t serial_rx_ind(rt_device_t dev, rt_size_t size);
 static void serial_soft_trans_irq(void const * parameter);
 
 /* ----------------------- Start implementation -----------------------------*/
@@ -134,16 +134,20 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
     if (xRxEnable)
     {
         /* enable RX interrupt */
-        serial->ops->control(serial, RT_DEVICE_CTRL_SET_INT, (void *)RT_DEVICE_FLAG_INT_RX);
+//        serial->ops->control(serial, RT_DEVICE_CTRL_SET_INT, (void *)RT_DEVICE_FLAG_INT_RX);
+    	__HAL_UART_ENABLE_IT(serial, UART_IT_RXNE);
         /* switch 485 to receive mode */
-        rt_pin_write(MODBUS_MASTER_RT_CONTROL_PIN_INDEX, PIN_LOW);
+//        rt_pin_write(MODBUS_MASTER_RT_CONTROL_PIN_INDEX, PIN_LOW);
+        HAL_GPIO_WritePin(RX_TX_GPIO_Port, RX_TX_Pin, GPIO_PIN_RESET);
     }
     else
     {
         /* switch 485 to transmit mode */
-        rt_pin_write(MODBUS_MASTER_RT_CONTROL_PIN_INDEX, PIN_HIGH);
+//        rt_pin_write(MODBUS_MASTER_RT_CONTROL_PIN_INDEX, PIN_HIGH);
+        HAL_GPIO_WritePin(RX_TX_GPIO_Port, RX_TX_Pin, GPIO_PIN_SET);
         /* disable RX interrupt */
-        serial->ops->control(serial, RT_DEVICE_CTRL_CLR_INT, (void *)RT_DEVICE_FLAG_INT_RX);
+//        serial->ops->control(serial, RT_DEVICE_CTRL_CLR_INT, (void *)RT_DEVICE_FLAG_INT_RX);
+        __HAL_UART_DISABLE_IT(serial, UART_IT_RXNE);
     }
     if (xTxEnable)
     {
@@ -162,23 +166,30 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 							pdTRUE,
 							pdFALSE,
 							portMAX_DELAY );
+    	switch ( recved_event ) {
+    	default:
+    		break;
+    	}
     }
 }
 
 void vMBMasterPortClose(void)
 {
-    serial->parent.close(&(serial->parent));
+//    serial->parent.close(&(serial->parent));
+	HAL_UART_DeInit(serial);
 }
 
 BOOL xMBMasterPortSerialPutByte(CHAR ucByte)
 {
-    serial->parent.write(&(serial->parent), 0, &ucByte, 1);
+//    serial->parent.write(&(serial->parent), 0, &ucByte, 1);
+    HAL_UART_Transmit_IT(serial, &ucByte, 1);
     return TRUE;
 }
 
 BOOL xMBMasterPortSerialGetByte(CHAR * pucByte)
 {
-    serial->parent.read(&(serial->parent), 0, pucByte, 1);
+//    serial->parent.read(&(serial->parent), 0, pucByte, 1);
+	HAL_UART_Receive_IT(serial, pucByte, 1);
     return TRUE;
 }
 
@@ -210,7 +221,7 @@ void prvvUARTRxISR(void)
  *
  * @param parameter parameter
  */
-static void serial_soft_trans_irq(void* parameter) {
+static void serial_soft_trans_irq(void const * parameter) {
 	EventBits_t recved_event;
     while (1)
     {
@@ -220,6 +231,11 @@ static void serial_soft_trans_irq(void* parameter) {
 						pdTRUE,
     					pdFALSE,
 						portMAX_DELAY);
+
+    	switch ( recved_event ) {
+		default:
+			break;
+		}
         /* execute modbus callback */
         prvvUARTTxReadyISR();
     }
@@ -233,9 +249,13 @@ static void serial_soft_trans_irq(void* parameter) {
  *
  * @return return RT_EOK
  */
-static rt_err_t serial_rx_ind(rt_device_t dev, rt_size_t size) {
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//static HAL_StatusTypeDef serial_rx_ind(rt_device_t dev, rt_size_t size)
+{
     prvvUARTRxISR();
-    return RT_EOK;
+//    return HAL_OK;
 }
 
-#endif
+
+
+#endif /*MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0*/

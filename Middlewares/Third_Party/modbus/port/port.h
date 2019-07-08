@@ -23,6 +23,7 @@
 #ifndef _PORT_H
 #define _PORT_H
 
+#include "main.h"
 #if defined (STM32L151xBA)
 #include "stm32l1xx_hal.h"
 #else
