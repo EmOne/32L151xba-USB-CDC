@@ -23,12 +23,16 @@
 #ifndef _PORT_H
 #define _PORT_H
 
-#include <assert.h>
 #if defined (STM32L151xBA)
 #include "stm32l1xx_hal.h"
 #else
 #include "stm32f4xx_hal.h"
 #endif
+#include "mbconfig.h"
+
+#include <assert.h>
+#include <inttypes.h>
+
 
 #define	INLINE                      inline
 #define PR_BEGIN_EXTERN_C           extern "C" {

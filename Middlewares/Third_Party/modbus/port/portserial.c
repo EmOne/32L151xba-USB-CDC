@@ -54,15 +54,26 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
 }
  
 BOOL
-xMBPortSerialInit(void * hObj, UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity )
+xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity )
 {
   /* 
   Do nothing, Initialization is handled by MX_USARTx_UART_Init()
   Fixed port, baudrate, databit and parity  
   */
-	if (hObj != NULL) {
-		hUART = (UART_HandleTypeDef *) hObj;
+
+	if (ucPORT == 1) {
+		extern UART_HandleTypeDef huart1;
+		hUART = (UART_HandleTypeDef *) &huart1;
+	} else if (ucPORT == 2) {
+//		extern UART_HandleTypeDef huart2;
+//		hUART = (UART_HandleTypeDef *) &huart2;
+	} else if (ucPORT == 3) {
+//		extern UART_HandleTypeDef huart3;
+//		hUART = (UART_HandleTypeDef *) &huart3;
+	} else {
+
 	}
+
   return TRUE;
 }
  

@@ -26,15 +26,27 @@ void ModbusRTUTask(void const * argument)
   usRegInputBuf[6] = 77;
   usRegInputBuf[7] = 88;  
   
-  UART_HandleTypeDef* hObj = (UART_HandleTypeDef *) argument;
+  eMBErrorCode eStatus =
+#if defined (MB_MASTER_RTU_ENABLED)
+		  eMBMasterInit(MB_RTU, 1, 4800, MB_PAR_NONE);
+#else
+  	  eMBInit(MB_RTU, 1, 3, 4800, MB_PAR_NONE );
+#endif
 
-  eMBErrorCode eStatus = eMBInit(hObj, MB_RTU, 1, 3, 4800, MB_PAR_NONE );
   if (eStatus == MB_ENOERR) {
+#if defined (MB_MASTER_RTU_ENABLED)
+	 eStatus = eMBMasterEnable();
+#else
 	 eStatus = eMBEnable();
+#endif
   }
 
   while(1) {
-    eMBPoll();           
+#if defined (MB_MASTER_RTU_ENABLED)
+    eMBMasterPoll();
+#else
+    eMBPoll();
+#endif
   }
 }
 
@@ -75,7 +87,6 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
 {
     return MB_ENOREG;
 }
-
 
 eMBErrorCode
 eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,

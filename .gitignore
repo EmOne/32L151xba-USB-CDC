@@ -1,1 +1,7 @@
 /Debug/
+/.cproject
+/.project
+/*.launch
+/*.cfg
+/*.ftl
+/*.tmp
