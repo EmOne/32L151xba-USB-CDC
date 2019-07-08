@@ -20,14 +20,16 @@
  * Maintain by: Anol Paisal <anol.p@emone.co.th>
  */
 
-/* ----------------------- Modbus includes ----------------------------------*/
-#include "mb.h"
-#include "mb_m.h"
-#include "mbport.h"
+/* ----------------------- Platform includes --------------------------------*/
 #include "port.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "event_groups.h"
+
+/* ----------------------- Modbus includes ----------------------------------*/
+#include "mb.h"
+#include "mb_m.h"
+#include "mbport.h"
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Defines ------------------------------------------*/

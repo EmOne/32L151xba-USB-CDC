@@ -22,13 +22,12 @@
 
 /* ----------------------- Platform includes --------------------------------*/
 #include "port.h"
-
+#include "FreeRTOS.h"
+#include "timers.h"
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mb_m.h"
 #include "mbport.h"
-#include "FreeRTOS.h"
-#include "timers.h"
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Variables ----------------------------------------*/

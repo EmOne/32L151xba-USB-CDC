@@ -20,14 +20,16 @@
  * Maintain by: Anol Paisal <anol.p@emone.co.th>
  */
 
+/* ----------------------- Platform includes --------------------------------*/
 #include "port.h"
+#include "cmsis_os.h"
+#include "FreeRTOS.h"
+#include "event_groups.h"
 
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
-#include "cmsis_os.h"
-#include "FreeRTOS.h"
-#include "event_groups.h"
+
 //#include "rtdevice.h"
 //#include "bsp.h"
 
@@ -57,7 +59,19 @@ static void serial_soft_trans_irq(void const * parameter);
 BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
-    /**
+	if (ucPORT == 1) {
+		extern UART_HandleTypeDef huart1;
+		serial = (UART_HandleTypeDef *) &huart1;
+	} else if (ucPORT == 2) {
+//		extern UART_HandleTypeDef huart2;
+//		serial = (UART_HandleTypeDef *) &huart2;
+	} else if (ucPORT == 3) {
+//		extern UART_HandleTypeDef huart3;
+//		serial = (UART_HandleTypeDef *) &huart3;
+	} else {
+
+	}
+	/**
      * set 485 mode receive and transmit control IO
      * @note MODBUS_MASTER_RT_CONTROL_PIN_INDEX need be defined by user
      */

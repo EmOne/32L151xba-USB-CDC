@@ -53,14 +53,14 @@
  *
  * \param [IN] mask Pointer to a variable where to store the CPU IRQ mask
  */
-void BoardCriticalSectionBegin( uint32_t *mask );
+INLINE void BoardCriticalSectionBegin( uint32_t *mask );
 
 /*!
  * Ends critical section
  *
  * \param [IN] mask Pointer to a variable where the CPU IRQ mask was stored
  */
-void BoardCriticalSectionEnd( uint32_t *mask );
+INLINE void BoardCriticalSectionEnd( uint32_t *mask );
 
 typedef uint8_t BOOL;
 
