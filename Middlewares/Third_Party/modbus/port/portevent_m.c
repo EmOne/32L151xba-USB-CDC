@@ -59,12 +59,16 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent )
 {
 	EventBits_t recvedEvent;
     /* waiting forever OS event */
+//	 rt_event_recv(&xMasterOsEvent,
+//	            EV_MASTER_READY | EV_MASTER_FRAME_RECEIVED | EV_MASTER_EXECUTE |
+//	            EV_MASTER_FRAME_SENT | EV_MASTER_ERROR_PROCESS,
+//	            RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER,
+//	            &recvedEvent);
 	recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
             EV_MASTER_READY | EV_MASTER_FRAME_RECEIVED | EV_MASTER_EXECUTE |
             EV_MASTER_FRAME_SENT | EV_MASTER_ERROR_PROCESS,
-            //RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
 			pdTRUE,
-			pdFALSE,
+			pdTRUE,
             portMAX_DELAY);
     /* the enum type couldn't convert to int type */
     switch (recvedEvent)
@@ -224,7 +228,7 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
                     | EV_MASTER_ERROR_RECEIVE_DATA
                     | EV_MASTER_ERROR_EXECUTE_FUNCTION,
 			pdTRUE,
-			pdFALSE,
+			pdTRUE,
 			portMAX_DELAY);
     switch (recvedEvent)
     {

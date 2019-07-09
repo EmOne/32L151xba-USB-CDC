@@ -117,7 +117,8 @@ eMBMasterRTUInit(UCHAR ucPort, ULONG ulBaudRate, eMBParity eParity )
              * The reload for t3.5 is 1.5 times this value and similary
              * for t3.5.
              */
-            usTimerT35_50us = ( 7UL * 220000UL ) / ( 2UL * ulBaudRate );
+//            usTimerT35_50us = ( 7UL * 220000UL ) / ( 2UL * ulBaudRate );
+            usTimerT35_50us = ( 7UL * 11000UL ) / ( 2UL * ulBaudRate );
         }
         if( xMBMasterPortTimersInit( ( USHORT ) usTimerT35_50us ) != TRUE )
         {

@@ -20,7 +20,10 @@
  */
 
 #include "port.h"
- 
+#include "cmsis_os.h"
+#include "FreeRTOS.h"
+#include "event_groups.h"
+
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
@@ -28,7 +31,8 @@
 /* ----------------------- static functions ---------------------------------*/
 //static void prvvUARTTxReadyISR( void );
 //static void prvvUARTRxISR( void );
- 
+__ALIGNED(portBYTE_ALIGNMENT)
+
 /* -----------------------    variables     ---------------------------------*/
 UART_HandleTypeDef *hUART;
  

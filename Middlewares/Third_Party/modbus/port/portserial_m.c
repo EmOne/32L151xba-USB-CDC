@@ -35,9 +35,9 @@
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Static variables ---------------------------------*/
-//ALIGN(RT_ALIGN_SIZE)
+//__ALIGNED(portBYTE_ALIGNMENT)
 /* software simulation serial transmit IRQ handler thread stack */
-static uint8_t serial_soft_trans_irq_stack = 512;
+//static uint16_t serial_soft_trans_irq_stack = 512;
 /* software simulation serial transmit IRQ handler thread */
 static osThreadId thread_serial_soft_trans_irq;
 /* serial event */
@@ -136,8 +136,8 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 //                   10, 5);
 //    rt_thread_startup(&thread_serial_soft_trans_irq);
     event_serial = xEventGroupCreate();
-    osThreadDef(SerialTask, serial_soft_trans_irq, osPriorityNormal, 0, serial_soft_trans_irq_stack);
-    thread_serial_soft_trans_irq = osThreadCreate(osThread(SerialTask), &event_serial);
+    osThreadDef(SerialTask, serial_soft_trans_irq, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
+    thread_serial_soft_trans_irq = osThreadCreate(osThread(SerialTask), NULL);
 
     return TRUE;
 }
@@ -173,7 +173,7 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
     {
         /* stop serial transmit */
 //        rt_event_recv(&event_serial, EVENT_SERIAL_TRANS_START,
-//                RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, 0,
+//                RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO,
 //                &recved_event);
     	recved_event = xEventGroupWaitBits( event_serial,
 							EVENT_SERIAL_TRANS_START,
@@ -242,8 +242,8 @@ static void serial_soft_trans_irq(void const * parameter) {
         /* waiting for serial transmit start */
     	recved_event =  xEventGroupWaitBits(event_serial,
     					EVENT_SERIAL_TRANS_START,
-						pdTRUE,
-    					pdFALSE,
+						pdFALSE,
+    					pdTRUE,
 						portMAX_DELAY);
 
     	switch ( recved_event ) {

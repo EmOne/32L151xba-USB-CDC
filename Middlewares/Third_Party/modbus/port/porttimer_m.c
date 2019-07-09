@@ -31,6 +31,7 @@
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Variables ----------------------------------------*/
+#define TICK_PER_SECOND 1000U
 static USHORT usT35TimeOut50us;
 static TimerHandle_t timer;
 static void prvvTIMERExpiredISR(void);
@@ -52,7 +53,7 @@ BOOL xMBMasterPortTimersInit(USHORT usTimeOut50us)
 //                   RT_TIMER_FLAG_ONE_SHOT); /* one shot */
 
     timer = xTimerCreate ("master timer",
-    		pdMS_TO_TICKS((50 * usT35TimeOut50us) / (1000*1000/ HAL_GetTickFreq())),
+    		pdMS_TO_TICKS((50 * usT35TimeOut50us) / (1000 * 1000 / TICK_PER_SECOND) + 1),
     		/* Setting uxAutoRealod to pdFALSE creates a one-shot software timer. */
     		pdFALSE,
     		/* This example does not use the timer id. */
@@ -62,9 +63,9 @@ BOOL xMBMasterPortTimersInit(USHORT usTimeOut50us)
     return TRUE;
 }
 
-void vMBMasterPortTimersT35Enable()
+void vMBMasterPortTimersT35Enable( void )
 {
-	const TickType_t timer_tick = pdMS_TO_TICKS((50 * usT35TimeOut50us) / (1000*1000/ HAL_GetTickFreq()));
+	const TickType_t timer_tick = pdMS_TO_TICKS((50 * usT35TimeOut50us) / (1000 * 1000 / TICK_PER_SECOND));
 
     /* Set current timer mode, don't change it.*/
     vMBMasterSetCurTimerMode(MB_TMODE_T35);
@@ -76,7 +77,7 @@ void vMBMasterPortTimersT35Enable()
 
 void vMBMasterPortTimersConvertDelayEnable()
 {
-	const TickType_t timer_tick = MB_MASTER_DELAY_MS_CONVERT * HAL_GetTickFreq() / 1000;
+	const TickType_t timer_tick = MB_MASTER_DELAY_MS_CONVERT * TICK_PER_SECOND / 1000;
 
     /* Set current timer mode, don't change it.*/
     vMBMasterSetCurTimerMode(MB_TMODE_CONVERT_DELAY);
@@ -88,7 +89,7 @@ void vMBMasterPortTimersConvertDelayEnable()
 
 void vMBMasterPortTimersRespondTimeoutEnable()
 {
-	const TickType_t timer_tick = MB_MASTER_TIMEOUT_MS_RESPOND * HAL_GetTickFreq() / 1000;
+	const TickType_t timer_tick = MB_MASTER_TIMEOUT_MS_RESPOND * TICK_PER_SECOND / 1000;
 
     /* Set current timer mode, don't change it.*/
     vMBMasterSetCurTimerMode(MB_TMODE_RESPOND_TIMEOUT);
