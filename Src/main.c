@@ -21,11 +21,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+//#include "mbport.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,8 +43,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-CRC_HandleTypeDef hcrc;
-
 TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart1;
@@ -60,13 +57,13 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM7_Init(void);
-static void MX_CRC_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+extern void thread_entry_SysMonitor(void const * argument);
 extern void thread_entry_ModbusMasterPoll(void const * argument);
 //extern void thread_entry_ModbusSlavePoll(void const * argument);
-extern void thread_entry_SysMonitor(void const * argument);
+extern void prvvMastesTIMERExpiredISR(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -105,7 +102,6 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM7_Init();
-  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -188,32 +184,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief CRC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CRC_Init(void)
-{
-
-  /* USER CODE BEGIN CRC_Init 0 */
-
-  /* USER CODE END CRC_Init 0 */
-
-  /* USER CODE BEGIN CRC_Init 1 */
-
-  /* USER CODE END CRC_Init 1 */
-  hcrc.Instance = CRC;
-  if (HAL_CRC_Init(&hcrc) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CRC_Init 2 */
-
-  /* USER CODE END CRC_Init 2 */
-
 }
 
 /**
@@ -313,10 +283,10 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PA0 PA2 PA3 PA4 
                            PA5 PA6 PA7 PA8 
-                           PA15 */
+                           PA11 PA12 PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4 
                           |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8 
-                          |GPIO_PIN_15;
+                          |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -355,16 +325,17 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-  /* init code for USB_DEVICE */
-//  MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
-//  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
+	osThreadDef(sysMonitorTask, thread_entry_SysMonitor, osPriorityLow, 0, configMINIMAL_STACK_SIZE);
+//	osThreadId sysMonitorTaskHandle =
+			osThreadCreate(osThread(sysMonitorTask), NULL);
+//  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
 //  osThreadCreate(osThread(sModbusTask), NULL);
-  osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
-  osThreadId mModbusTaskHandle = osThreadCreate(osThread(mModbusTask), NULL);
-  osThreadDef(sysMonitorTask, thread_entry_SysMonitor, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
-  osThreadId sysMonitorTaskHandle = osThreadCreate(osThread(sysMonitorTask), NULL);
+	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
+//	osThreadId mModbusTaskHandle =
+			osThreadCreate(osThread(mModbusTask), NULL);
+
   /* Infinite loop */
   for(;;)
   {
@@ -390,7 +361,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  else if (htim->Instance == TIM7) {
+	  (void) prvvMastesTIMERExpiredISR();
+  }
   /* USER CODE END Callback 1 */
 }
 

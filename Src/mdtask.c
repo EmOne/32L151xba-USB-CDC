@@ -47,7 +47,7 @@ void thread_entry_ModbusMasterPoll(void const * argument)
 		  eMBMasterInit(MB_RTU, 1, 4800, MB_PAR_NONE);
 
   if (eStatus == MB_ENOERR) {
-	 eStatus = eMBEnable();
+	 eStatus = eMBMasterEnable();
   }
 
   while(1) {

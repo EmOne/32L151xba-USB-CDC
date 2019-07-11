@@ -350,7 +350,7 @@ eMBMasterPoll( void )
             	( void ) xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
             }
             else {
-            	vMBMasterCBRequestScuuess( );
+            	vMBMasterCBRequestSuccess( );
             	vMBMasterRunResRelease( );
             }
             break;

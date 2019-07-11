@@ -30,6 +30,7 @@
 #include "mb.h"
 #include "mb_m.h"
 #include "mbport.h"
+#include "timers.h"
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Defines ------------------------------------------*/
@@ -49,8 +50,9 @@ xMBMasterPortEventInit( void )
 BOOL
 xMBMasterPortEventPost( eMBMasterEventType eEvent )
 {
+//	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	xEventGroupSetBits(xMasterOsEvent, eEvent);
-
+//	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     return TRUE;
 }
 
@@ -199,7 +201,7 @@ void vMBMasterErrorCBExecuteFunction(UCHAR ucDestAddress, const UCHAR* pucPDUDat
  * So,for real-time of system.Do not execute too much waiting process.
  *
  */
-void vMBMasterCBRequestScuuess( void ) {
+void vMBMasterCBRequestSuccess( void ) {
     /**
      * @note This code is use OS's event mechanism for modbus master protocol stack.
      * If you don't use OS, you can change it.
