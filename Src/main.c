@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mbconfig.h"
 //#include "mbport.h"
 /* USER CODE END Includes */
 
@@ -49,7 +50,16 @@ UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
-
+#if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
+osThreadId simulateTaskHandle;
+osThreadId modbusMasterTaskHandle;
+#elif MB_SLAVE_RTU_ENABLED > 0 || MB_SLAVE_ASCII_ENABLED > 0
+osThreadId modbusSlaveTaskHandle;
+#else
+#error	"Please define MB_MASTER_RTU_ENABLED or MB_SLAVE_RTU_ENABLED"
+#endif
+uint16_t CpuUsageMajor;
+uint16_t CpuUsageMinor;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,11 +69,16 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM7_Init(void);
 void StartDefaultTask(void const * argument);
 
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-extern void thread_entry_SysMonitor(void const * argument);
+#if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
+extern void thread_entry_Simulation(void const * argument);
 extern void thread_entry_ModbusMasterPoll(void const * argument);
-//extern void thread_entry_ModbusSlavePoll(void const * argument);
 extern void prvvMastesTIMERExpiredISR(void);
+#else
+extern void thread_entry_ModbusSlavePoll(void const * argument);
+extern void prvvTIMERExpiredISR(void);
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,6 +117,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM7_Init();
+
+  /* Initialize interrupts */
+  MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -124,11 +142,25 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+
+#if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
+	osThreadDef(simulateTask, thread_entry_Simulation, osPriorityNormal, 0,
+			configMINIMAL_STACK_SIZE * 4);
+	simulateTaskHandle = osThreadCreate(osThread(simulateTask), NULL);
+
+	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0,
+			configMINIMAL_STACK_SIZE * 4);
+	modbusMasterTaskHandle = osThreadCreate(osThread(mModbusTask), NULL);
+#else
+	  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
+	  modbusSlaveTaskHandle = osThreadCreate(osThread(sModbusTask),  NULL);
+#endif
+
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -184,6 +216,20 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void)
+{
+  /* TIM7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(TIM7_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(TIM7_IRQn);
+  /* USART1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /**
@@ -327,14 +373,6 @@ void StartDefaultTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
-	osThreadDef(sysMonitorTask, thread_entry_SysMonitor, osPriorityLow, 0, configMINIMAL_STACK_SIZE);
-//	osThreadId sysMonitorTaskHandle =
-			osThreadCreate(osThread(sysMonitorTask), NULL);
-//  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
-//  osThreadCreate(osThread(sModbusTask), NULL);
-	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
-//	osThreadId mModbusTaskHandle =
-			osThreadCreate(osThread(mModbusTask), NULL);
 
   /* Infinite loop */
   for(;;)
@@ -362,8 +400,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM7) {
+
 	  (void) prvvMastesTIMERExpiredISR();
   }
+
   /* USER CODE END Callback 1 */
 }
 

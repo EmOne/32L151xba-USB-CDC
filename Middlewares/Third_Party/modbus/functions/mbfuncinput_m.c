@@ -75,8 +75,10 @@ eMBMasterReqReadInputRegister( UCHAR ucSndAddr, USHORT usRegAddr, USHORT usNRegs
     UCHAR                 *ucMBFrame;
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
-    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
-//    else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
+    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM )
+    	eErrStatus = MB_MRE_ILL_ARG;
+    else if ( xMBMasterRunResTake( lTimeOut ) == FALSE )
+    	eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
 		vMBMasterGetPDUSndBuf(&ucMBFrame);

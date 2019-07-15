@@ -24,6 +24,9 @@
 #include "cmsis_os.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mb.h"
+#include "mbport.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -167,7 +170,20 @@ void DebugMon_Handler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
+	uint32_t tmp_flag = __HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE);
+	uint32_t tmp_it_source = __HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_RXNE);
 
+	if ((tmp_flag != RESET) && (tmp_it_source != RESET)) {
+		pxMBMasterFrameCBByteReceived();
+		__HAL_UART_CLEAR_PEFLAG(&huart1);
+		return;
+	}
+
+	if ((__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
+			&& (__HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_TXE) != RESET)) {
+		pxMBMasterFrameCBTransmitterEmpty();
+		return;
+	}
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */

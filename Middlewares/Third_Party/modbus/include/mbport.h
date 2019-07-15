@@ -99,6 +99,8 @@ void            vMBMasterOsResInit( void );
 
 BOOL            xMBMasterRunResTake( int32_t time );
 
+void 			xMBMasterRunResTakeFromISR ( void );
+
 void            vMBMasterRunResRelease( void );
 
 /* ----------------------- Serial port functions ----------------------------*/

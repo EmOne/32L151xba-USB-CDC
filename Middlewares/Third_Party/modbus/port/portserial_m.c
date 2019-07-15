@@ -59,6 +59,10 @@ static void serial_soft_trans_irq(void const * parameter);
 BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
+
+	if(event_serial == NULL)
+		event_serial = xEventGroupCreate();
+
 	if (ucPORT == 1) {
 		extern UART_HandleTypeDef huart1;
 		serial = (UART_HandleTypeDef *) &huart1;
@@ -71,52 +75,32 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 	} else {
 
 	}
-	/**
-     * set 485 mode receive and transmit control IO
-     * @note MODBUS_MASTER_RT_CONTROL_PIN_INDEX need be defined by user
-     */
-//    rt_pin_mode(MODBUS_MASTER_RT_CONTROL_PIN_INDEX, PIN_MODE_OUTPUT);
-//
-//    /* set serial name */
-//    if (ucPORT == 1) {
-//#if defined(RT_USING_UART1) || defined(RT_USING_REMAP_UART1)
-//        extern struct rt_serial_device serial1;
-//        serial = &serial1;
-//#endif
-//    } else if (ucPORT == 2) {
-//#if defined(RT_USING_UART2)
-//        extern struct rt_serial_device serial2;
-//        serial = &serial2;
-//#endif
-//    } else if (ucPORT == 3) {
-//#if defined(RT_USING_UART3)
-//        extern struct rt_serial_device serial3;
-//        serial = &serial3;
-//#endif
-//    }
-//    /* set serial configure parameter */
-//    serial->config.baud_rate = ulBaudRate;
-//    serial->config.stop_bits = STOP_BITS_1;
-//    switch(eParity){
-//    case MB_PAR_NONE: {
-//        serial->config.data_bits = DATA_BITS_8;
-//        serial->config.parity = PARITY_NONE;
-//        break;
-//    }
-//    case MB_PAR_ODD: {
-//        serial->config.data_bits = DATA_BITS_9;
-//        serial->config.parity = PARITY_ODD;
-//        break;
-//    }
-//    case MB_PAR_EVEN: {
-//        serial->config.data_bits = DATA_BITS_9;
-//        serial->config.parity = PARITY_EVEN;
-//        break;
-//    }
-//    }
-//    /* set serial configure */
-//    serial->ops->configure(serial, &(serial->config));
-//
+
+	serial->Init.BaudRate = ulBaudRate;
+	serial->Init.StopBits = UART_STOPBITS_1;
+
+	switch(eParity){
+	case MB_PAR_NONE: {
+		serial->Init.WordLength = UART_WORDLENGTH_8B;
+		serial->Init.Parity = UART_PARITY_NONE;
+		break;
+	}
+	case MB_PAR_ODD: {
+		serial->Init.WordLength = UART_WORDLENGTH_9B;
+		serial->Init.Parity = UART_PARITY_ODD;
+		break;
+	}
+	case MB_PAR_EVEN: {
+		serial->Init.WordLength = UART_WORDLENGTH_9B;
+		serial->Init.Parity = UART_PARITY_EVEN;
+		break;
+	}
+	}
+	if (HAL_UART_Init(serial) != HAL_OK) {
+
+	}
+
+
 //    /* open serial device */
 //    if (!serial->parent.open(&serial->parent,
 //            RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX )) {
@@ -126,7 +110,6 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 //    }
 
     /* software initialize */
-//    rt_event_init(&event_serial, "master event", RT_IPC_FLAG_PRIO);
 //    rt_thread_init(&thread_serial_soft_trans_irq,
 //                   "master trans",
 //                   serial_soft_trans_irq,
@@ -135,7 +118,6 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 //                   sizeof(serial_soft_trans_irq_stack),
 //                   10, 5);
 //    rt_thread_startup(&thread_serial_soft_trans_irq);
-    event_serial = xEventGroupCreate();
     osThreadDef(SerialTask, serial_soft_trans_irq, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
     thread_serial_soft_trans_irq = osThreadCreate(osThread(SerialTask), NULL);
 
@@ -168,6 +150,8 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
         /* start serial transmit */
 //        rt_event_send(&event_serial, EVENT_SERIAL_TRANS_START);
         xEventGroupSetBits(event_serial, EVENT_SERIAL_TRANS_START);
+        __HAL_UART_ENABLE_IT(serial, UART_IT_TXE);
+        prvvUARTTxReadyISR();
     }
     else
     {
@@ -175,35 +159,32 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 //        rt_event_recv(&event_serial, EVENT_SERIAL_TRANS_START,
 //                RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO,
 //                &recved_event);
-    	recved_event = xEventGroupWaitBits( event_serial,
-							EVENT_SERIAL_TRANS_START,
-							pdTRUE,
-							pdFALSE,
-							portMAX_DELAY );
-    	switch ( recved_event ) {
-    	default:
-    		break;
-    	}
+//    	recved_event = xEventGroupWaitBits( event_serial,
+//							EVENT_SERIAL_TRANS_START,
+//							pdFALSE,
+//							pdFALSE,
+//							portMAX_DELAY );
+    	__HAL_UART_DISABLE_IT(serial, UART_IT_TXE);
+//    	switch ( recved_event ) {
+//    	default:
+//    		break;
+//    	}
     }
 }
 
 void vMBMasterPortClose(void)
 {
-//    serial->parent.close(&(serial->parent));
 	HAL_UART_DeInit(serial);
 }
 
 BOOL xMBMasterPortSerialPutByte(CHAR ucByte)
 {
-//    serial->parent.write(&(serial->parent), 0, &ucByte, 1);
-    HAL_UART_Transmit_IT(serial, &ucByte, 1);
-    return TRUE;
+	return (HAL_OK == HAL_UART_Transmit(serial, (uint8_t*)&ucByte, 1, 10));
 }
 
 BOOL xMBMasterPortSerialGetByte(CHAR * pucByte)
 {
-//    serial->parent.read(&(serial->parent), 0, pucByte, 1);
-	HAL_UART_Receive_IT(serial, pucByte, 1);
+	 *pucByte = (uint8_t)(serial->Instance->DR & (uint8_t)0x00FF);
     return TRUE;
 }
 
@@ -237,7 +218,7 @@ void prvvUARTRxISR(void)
  */
 static void serial_soft_trans_irq(void const * parameter) {
 	EventBits_t recved_event;
-    while (1)
+    for (;;)
     {
         /* waiting for serial transmit start */
     	recved_event =  xEventGroupWaitBits(event_serial,
@@ -246,10 +227,6 @@ static void serial_soft_trans_irq(void const * parameter) {
     					pdTRUE,
 						portMAX_DELAY);
 
-    	switch ( recved_event ) {
-		default:
-			break;
-		}
         /* execute modbus callback */
         prvvUARTTxReadyISR();
     }
@@ -264,12 +241,13 @@ static void serial_soft_trans_irq(void const * parameter) {
  * @return return RT_EOK
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-//static HAL_StatusTypeDef serial_rx_ind(rt_device_t dev, rt_size_t size)
 {
     prvvUARTRxISR();
-//    return HAL_OK;
 }
 
-
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	prvvUARTTxReadyISR();
+}
 
 #endif /*MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0*/

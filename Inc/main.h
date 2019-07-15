@@ -62,6 +62,13 @@ void Error_Handler(void);
 #define RX_TX_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
+extern uint8_t   ucSDiscInBuf[]  ;
+extern uint8_t   ucSCoilBuf[]    ;
+extern uint16_t   usSRegInBuf[]   ;
+extern uint16_t   usSRegHoldBuf[] ;
+
+extern uint16_t CpuUsageMajor;
+extern uint16_t CpuUsageMinor;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

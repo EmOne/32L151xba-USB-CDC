@@ -24,11 +24,12 @@
 #define _PORT_H
 
 #include "main.h"
-#if defined (STM32L151xBA)
-#include "stm32l1xx_hal.h"
-#else
-#include "stm32f4xx_hal.h"
-#endif
+#include "cmsis_os.h"
+//#if defined (STM32L151xBA)
+//#include "stm32l1xx_hal.h"
+//#else
+//#include "stm32f4xx_hal.h"
+//#endif
 #include "mbconfig.h"
 
 #include <assert.h>
@@ -39,13 +40,13 @@
 #define PR_BEGIN_EXTERN_C           extern "C" {
 #define	PR_END_EXTERN_C             }
 
-#define ENTER_CRITICAL_SECTION() uint32_t mask; BoardCriticalSectionBegin( &mask )
-#define EXIT_CRITICAL_SECTION() BoardCriticalSectionEnd( &mask )
+#define ENTER_CRITICAL_SECTION() portENTER_CRITICAL()//uint32_t mask; BoardCriticalSectionBegin( &mask ) //
+#define EXIT_CRITICAL_SECTION()  portEXIT_CRITICAL()//BoardCriticalSectionEnd( &mask ) //
 
 /*
  * ============================================================================
  * Following functions must be implemented inside the specific platform
- * board.c file.
+ * port.c file.
  * ============================================================================
  */
 /*!
@@ -53,14 +54,14 @@
  *
  * \param [IN] mask Pointer to a variable where to store the CPU IRQ mask
  */
-INLINE void BoardCriticalSectionBegin( uint32_t *mask );
+INLINE void BoardCriticalSectionBegin( uint32_t *mask ) ;
 
 /*!
  * Ends critical section
  *
  * \param [IN] mask Pointer to a variable where the CPU IRQ mask was stored
  */
-INLINE void BoardCriticalSectionEnd( uint32_t *mask );
+INLINE void BoardCriticalSectionEnd( uint32_t *mask ) ;
 
 typedef uint8_t BOOL;
 
