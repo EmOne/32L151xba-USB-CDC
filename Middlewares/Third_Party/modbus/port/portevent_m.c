@@ -54,6 +54,15 @@ xMBMasterPortEventInit( void )
 BOOL
 xMBMasterPortEventPost( eMBMasterEventType eEvent )
 {
+	xEventMasterInQueue = TRUE;
+	eQueuedMasterEvent = eEvent;
+	xEventGroupSetBits(xMasterOsEvent, eEvent);
+    return TRUE;
+}
+
+BOOL
+xMBMasterPortEventPostFromISR( eMBMasterEventType eEvent )
+{
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	xEventMasterInQueue = TRUE;
 	eQueuedMasterEvent = eEvent;
@@ -62,27 +71,29 @@ xMBMasterPortEventPost( eMBMasterEventType eEvent )
     return TRUE;
 }
 
+
 BOOL
 xMBMasterPortEventGet( eMBMasterEventType * eEvent )
 {
 	BOOL xEventHappened = FALSE;
-	const EventBits_t xBitsToWaitFor = ( EV_MASTER_READY | EV_MASTER_FRAME_RECEIVED | EV_MASTER_EXECUTE |
-            EV_MASTER_FRAME_SENT | EV_MASTER_ERROR_PROCESS );
+//	const EventBits_t xBitsToWaitFor = ( EV_MASTER_READY | EV_MASTER_FRAME_RECEIVED | EV_MASTER_EXECUTE |
+//            EV_MASTER_FRAME_SENT | EV_MASTER_ERROR_PROCESS );
     /* waiting forever OS event */
-	EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
-			xBitsToWaitFor,
-			pdTRUE,
-			pdFALSE,
-			portMAX_DELAY);
+//	EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
+//			xBitsToWaitFor,
+//			pdTRUE,
+//			pdFALSE,
+//			portMAX_DELAY);
 
 
+//	xEventGroupSetBits(xMasterOsEvent, eQueuedMasterEvent);
 	if (xEventMasterInQueue) {
 		*eEvent = eQueuedMasterEvent;
 		xEventMasterInQueue = FALSE;
 		xEventHappened = TRUE;
 	}
-	//	return xEventHappened;
-
+//	return xEventHappened;
+	EventBits_t recvedEvent =xEventGroupGetBitsFromISR(xMasterOsEvent);
 //    /* the enum type couldn't convert to int type */
     switch (recvedEvent)
     {
@@ -142,7 +153,7 @@ BOOL xMBMasterRunResTake( LONG lTimeOut )
  *
  * @return resource taked result
  */
-void xMBMasterRunResTakeFromISR( void )
+void xMBMasterRunResGiveFromISR( void )
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	/* 'Give' the semaphore to unblock the task, passing in the address of
@@ -253,18 +264,18 @@ void vMBMasterCBRequestSuccess( void ) {
  * @return request error code
  */
 eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
-    eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
-    const EventBits_t xBitsToWaitFor = ( EV_MASTER_PROCESS_SUCESS | EV_MASTER_ERROR_RESPOND_TIMEOUT
-            | EV_MASTER_ERROR_RECEIVE_DATA
-            | EV_MASTER_ERROR_EXECUTE_FUNCTION );
-    /* waiting for OS event */
-    EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
-            xBitsToWaitFor,
-			pdTRUE,
-			pdFALSE,
-			portMAX_DELAY);
+//    eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
+//    const EventBits_t xBitsToWaitFor = ( EV_MASTER_PROCESS_SUCESS | EV_MASTER_ERROR_RESPOND_TIMEOUT
+//            | EV_MASTER_ERROR_RECEIVE_DATA
+//            | EV_MASTER_ERROR_EXECUTE_FUNCTION );
+//    /* waiting for OS event */
+//    EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
+//            xBitsToWaitFor,
+//			pdTRUE,
+//			pdFALSE,
+//			portMAX_DELAY);
 //    while(1)
-		switch (recvedEvent)
+		switch (eQueuedMasterEvent)
 		{
 //		case EV_MASTER_READY:
 //		case EV_MASTER_FRAME_RECEIVED:
@@ -291,6 +302,8 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
 			eQueuedMasterEvent &= ~EV_MASTER_ERROR_EXECUTE_FUNCTION;
 			return MB_MRE_EXE_FUN;
 		}
+		default:
+			return MB_MRE_NO_ERR;
 		}
 
 }

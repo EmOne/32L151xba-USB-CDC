@@ -93,13 +93,15 @@ BOOL            xMBMasterPortEventInit( void );
 
 BOOL            xMBMasterPortEventPost( eMBMasterEventType eEvent );
 
+BOOL            xMBMasterPortEventPostFromISR( eMBMasterEventType eEvent );
+
 BOOL            xMBMasterPortEventGet(  /*@out@ */ eMBMasterEventType * eEvent );
 
 void            vMBMasterOsResInit( void );
 
 BOOL            xMBMasterRunResTake( int32_t time );
 
-void 			xMBMasterRunResTakeFromISR ( void );
+void 			xMBMasterRunResGiveFromISR ( void );
 
 void            vMBMasterRunResRelease( void );
 
@@ -162,7 +164,7 @@ void            vMBMasterErrorCBReceiveData( UCHAR ucDestAddress, const UCHAR* p
 void            vMBMasterErrorCBExecuteFunction( UCHAR ucDestAddress, const UCHAR* pucPDUData,
                                                  USHORT ucPDULength );
 
-void            vMBMasterCBRequestScuuess( void );
+void            vMBMasterCBRequestSuccess( void );
 
 /* ----------------------- Callback for the protocol stack ------------------*/
 

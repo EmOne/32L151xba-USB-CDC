@@ -121,7 +121,7 @@ void vMBMasterPortTimersConvertDelayEnable()
 #else
     htim7.Init.Period = MB_MASTER_DELAY_MS_CONVERT - 1;
 	HAL_TIM_Base_Init(&htim7);
-
+	downcounterMaster = usT35TimeOut50us;
 	HAL_TIM_Base_Start_IT(&htim7);
 #endif
 }
@@ -138,7 +138,6 @@ void vMBMasterPortTimersRespondTimeoutEnable()
 #else
     htim7.Init.Period = MB_MASTER_TIMEOUT_MS_RESPOND - 1;
 	HAL_TIM_Base_Init(&htim7);
-
     HAL_TIM_Base_Start_IT(&htim7);
 #endif
 }

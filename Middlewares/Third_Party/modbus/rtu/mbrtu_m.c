@@ -357,19 +357,19 @@ xMBMasterRTUTimerExpired(void)
 	{
 		/* Timer t35 expired. Startup phase is finished. */
 	case STATE_M_RX_INIT:
-		xNeedPoll = xMBMasterPortEventPost(EV_MASTER_READY);
+		xNeedPoll = xMBMasterPortEventPostFromISR(EV_MASTER_READY);
 		break;
 
 		/* A frame was received and t35 expired. Notify the listener that
 		 * a new frame was received. */
 	case STATE_M_RX_RCV:
-		xNeedPoll = xMBMasterPortEventPost(EV_MASTER_FRAME_RECEIVED);
+		xNeedPoll = xMBMasterPortEventPostFromISR(EV_MASTER_FRAME_RECEIVED);
 		break;
 
 		/* An error occured while receiving the frame. */
 	case STATE_M_RX_ERROR:
 		vMBMasterSetErrorType(EV_ERROR_RECEIVE_DATA);
-		xNeedPoll = xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
+		xNeedPoll = xMBMasterPortEventPostFromISR( EV_MASTER_ERROR_PROCESS );
 		break;
 
 		/* Function called in an illegal state. */
@@ -389,7 +389,7 @@ xMBMasterRTUTimerExpired(void)
 	case STATE_M_TX_XFWR:
 		if ( xFrameIsBroadcast == FALSE ) {
 			vMBMasterSetErrorType(EV_ERROR_RESPOND_TIMEOUT);
-			xNeedPoll = xMBMasterPortEventPost(EV_MASTER_ERROR_PROCESS);
+			xNeedPoll = xMBMasterPortEventPostFromISR(EV_MASTER_ERROR_PROCESS);
 		}
 		break;
 		/* Function called in an illegal state. */
@@ -403,7 +403,7 @@ xMBMasterRTUTimerExpired(void)
 	vMBMasterPortTimersDisable( );
 	/* If timer mode is convert delay, the master event then turns EV_MASTER_EXECUTE status. */
 	if (eMasterCurTimerMode == MB_TMODE_CONVERT_DELAY) {
-		xNeedPoll = xMBMasterPortEventPost( EV_MASTER_EXECUTE );
+		xNeedPoll = xMBMasterPortEventPostFromISR( EV_MASTER_EXECUTE );
 	}
 
 	return xNeedPoll;

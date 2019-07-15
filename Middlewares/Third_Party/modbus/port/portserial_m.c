@@ -118,8 +118,8 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 //                   sizeof(serial_soft_trans_irq_stack),
 //                   10, 5);
 //    rt_thread_startup(&thread_serial_soft_trans_irq);
-    osThreadDef(SerialTask, serial_soft_trans_irq, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
-    thread_serial_soft_trans_irq = osThreadCreate(osThread(SerialTask), NULL);
+//    osThreadDef(SerialTask, serial_soft_trans_irq, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
+//    thread_serial_soft_trans_irq = osThreadCreate(osThread(SerialTask), NULL);
 
     return TRUE;
 }
@@ -151,7 +151,7 @@ void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 //        rt_event_send(&event_serial, EVENT_SERIAL_TRANS_START);
         xEventGroupSetBits(event_serial, EVENT_SERIAL_TRANS_START);
         __HAL_UART_ENABLE_IT(serial, UART_IT_TXE);
-        prvvUARTTxReadyISR();
+//        prvvUARTTxReadyISR();
     }
     else
     {

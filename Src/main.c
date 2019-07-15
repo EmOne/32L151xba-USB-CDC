@@ -150,7 +150,7 @@ int main(void)
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 	osThreadDef(simulateTask, thread_entry_Simulation, osPriorityNormal, 0,
-			configMINIMAL_STACK_SIZE * 4);
+			configMINIMAL_STACK_SIZE);
 	simulateTaskHandle = osThreadCreate(osThread(simulateTask), NULL);
 
 	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0,

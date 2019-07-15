@@ -59,7 +59,7 @@ void thread_entry_Simulation(void const * argument) {
 //	;
 
 	for (;;) {
-		osDelay(1);
+		vTaskDelay(1);
 		CpuUsageMajor = osGetCPUUsage();
 		if (CpuUsageMajor > CpuUsageMinor) {
 			CpuUsageMinor = CpuUsageMajor;
