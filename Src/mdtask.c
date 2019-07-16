@@ -47,6 +47,7 @@ void thread_entry_ModbusMasterPoll(void const * argument) {
 	}
 
 	for (;;) {
+		vTaskDelay(1);
 		eMBMasterPoll();
 	}
 }
@@ -55,8 +56,8 @@ void thread_entry_Simulation(void const * argument) {
 	eMBMasterReqErrCode errorCode = MB_MRE_NO_ERR;
 	uint16_t errorCount = 0;
 
-//	traceTASK_SWITCHED_IN()
-//	;
+	traceTASK_SWITCHED_IN()
+	;
 
 	for (;;) {
 		vTaskDelay(1);
@@ -77,15 +78,15 @@ void thread_entry_Simulation(void const * argument) {
 		usModbusUserData[0] = (USHORT) (HAL_GetTick() / 10);
 		usModbusUserData[1] = (USHORT) (HAL_GetTick() % 10);
 		ucModbusUserData[0] = 0x1F;
-//		errorCode = eMBMasterReqReadDiscreteInputs(1,3,8,osWaitForever);
-//		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,osWaitForever);
-//		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,osWaitForever);
-//		errorCode = eMBMasterReqReadCoils(1,3,8,osWaitForever);
-		errorCode = eMBMasterReqReadInputRegister(1, 3, 8, osWaitForever);
-//		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],osWaitForever);
-//		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,osWaitForever);
-//		errorCode = eMBMasterReqReadHoldingRegister(1,3,2,osWaitForever);
-//		errorCode = eMBMasterReqReadWriteMultipleHoldingRegister(1,3,2,usModbusUserData,5,2,osWaitForever);
+//		errorCode = eMBMasterReqReadDiscreteInputs(1,3,8,-1);
+//		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,-1);
+//		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
+//		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
+		errorCode = eMBMasterReqReadInputRegister(1, 0, 10, 1000);
+//		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
+//		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
+//		errorCode = eMBMasterReqReadHoldingRegister(1,3,2,-1);
+//		errorCode = eMBMasterReqReadWriteMultipleHoldingRegister(1,3,2,usModbusUserData,5,2,-1);
 
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;

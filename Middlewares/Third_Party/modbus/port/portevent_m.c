@@ -56,8 +56,12 @@ xMBMasterPortEventPost( eMBMasterEventType eEvent )
 {
 	xEventMasterInQueue = TRUE;
 	eQueuedMasterEvent = eEvent;
-	xEventGroupSetBits(xMasterOsEvent, eEvent);
-    return TRUE;
+	xEventGroupClearBits(xMasterOsEvent, 0x1FF);
+	EventBits_t uxBitSet = xEventGroupSetBits(xMasterOsEvent, eEvent);
+	if (uxBitSet) {
+
+	}
+	return TRUE;
 }
 
 BOOL
@@ -66,7 +70,11 @@ xMBMasterPortEventPostFromISR( eMBMasterEventType eEvent )
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	xEventMasterInQueue = TRUE;
 	eQueuedMasterEvent = eEvent;
-	xEventGroupSetBitsFromISR(xMasterOsEvent, eEvent, &xHigherPriorityTaskWoken);
+	xEventGroupClearBitsFromISR(xMasterOsEvent, 0x1FF);
+	BaseType_t btEvent = xEventGroupSetBitsFromISR(xMasterOsEvent, eEvent, &xHigherPriorityTaskWoken);
+	if (btEvent) {
+
+	}
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     return TRUE;
 }
@@ -79,22 +87,15 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent )
 //	const EventBits_t xBitsToWaitFor = ( EV_MASTER_READY | EV_MASTER_FRAME_RECEIVED | EV_MASTER_EXECUTE |
 //            EV_MASTER_FRAME_SENT | EV_MASTER_ERROR_PROCESS );
     /* waiting forever OS event */
-//	EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
+//	EventBits_t recvedEvent = xEventGroupSync(xMasterOsEvent,
 //			xBitsToWaitFor,
-//			pdTRUE,
-//			pdFALSE,
+//			xBitsToWaitFor,
+////			pdTRUE,
+////			pdFALSE,
 //			portMAX_DELAY);
-
-
-//	xEventGroupSetBits(xMasterOsEvent, eQueuedMasterEvent);
-	if (xEventMasterInQueue) {
-		*eEvent = eQueuedMasterEvent;
-		xEventMasterInQueue = FALSE;
-		xEventHappened = TRUE;
-	}
-//	return xEventHappened;
-	EventBits_t recvedEvent =xEventGroupGetBitsFromISR(xMasterOsEvent);
-//    /* the enum type couldn't convert to int type */
+//
+	EventBits_t  recvedEvent =xEventGroupGetBitsFromISR(xMasterOsEvent);
+////    /* the enum type couldn't convert to int type */
     switch (recvedEvent)
     {
     case EV_MASTER_READY:
@@ -112,8 +113,17 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent )
     case EV_MASTER_ERROR_PROCESS:
         *eEvent = EV_MASTER_ERROR_PROCESS;
         break;
+    default:
+    	*eEvent = eQueuedMasterEvent;
+    	break;
     }
-    return TRUE;
+
+	if (xEventMasterInQueue) {
+		xEventMasterInQueue = FALSE;
+		xEventHappened = TRUE;
+	}
+
+	return xEventHappened;
 }
 /**
  * This function is initialize the OS resource for modbus master.
@@ -265,15 +275,18 @@ void vMBMasterCBRequestSuccess( void ) {
  */
 eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
 //    eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
-//    const EventBits_t xBitsToWaitFor = ( EV_MASTER_PROCESS_SUCESS | EV_MASTER_ERROR_RESPOND_TIMEOUT
-//            | EV_MASTER_ERROR_RECEIVE_DATA
-//            | EV_MASTER_ERROR_EXECUTE_FUNCTION );
-//    /* waiting for OS event */
-//    EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
-//            xBitsToWaitFor,
-//			pdTRUE,
-//			pdFALSE,
-//			portMAX_DELAY);
+    const EventBits_t xBitsToWaitFor = ( EV_MASTER_PROCESS_SUCESS | EV_MASTER_ERROR_RESPOND_TIMEOUT
+            | EV_MASTER_ERROR_RECEIVE_DATA
+            | EV_MASTER_ERROR_EXECUTE_FUNCTION );
+    /* waiting for OS event */
+    EventBits_t recvedEvent = xEventGroupWaitBits(xMasterOsEvent,
+            xBitsToWaitFor,
+			pdTRUE,
+			pdFALSE,
+			portMAX_DELAY);
+    if (recvedEvent) {
+
+	}
 //    while(1)
 		switch (eQueuedMasterEvent)
 		{
@@ -283,23 +296,23 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
 //		case EV_MASTER_FRAME_SENT:
 		case EV_MASTER_PROCESS_SUCESS:
 		{
-			eQueuedMasterEvent &= ~EV_MASTER_PROCESS_SUCESS;
+//			eQueuedMasterEvent &= ~EV_MASTER_PROCESS_SUCESS;
 			return MB_MRE_NO_ERR;
 
 		}
 		case EV_MASTER_ERROR_RESPOND_TIMEOUT:
 		{
-			eQueuedMasterEvent &= ~EV_MASTER_ERROR_RESPOND_TIMEOUT;
+//			eQueuedMasterEvent &= ~EV_MASTER_ERROR_RESPOND_TIMEOUT;
 			return MB_MRE_TIMEDOUT;
 		}
 		case EV_MASTER_ERROR_RECEIVE_DATA:
 		{
-			eQueuedMasterEvent &= ~EV_MASTER_ERROR_RECEIVE_DATA;
+//			eQueuedMasterEvent &= ~EV_MASTER_ERROR_RECEIVE_DATA;
 			return MB_MRE_REV_DATA;
 		}
 		case EV_MASTER_ERROR_EXECUTE_FUNCTION:
 		{
-			eQueuedMasterEvent &= ~EV_MASTER_ERROR_EXECUTE_FUNCTION;
+//			eQueuedMasterEvent &= ~EV_MASTER_ERROR_EXECUTE_FUNCTION;
 			return MB_MRE_EXE_FUN;
 		}
 		default:

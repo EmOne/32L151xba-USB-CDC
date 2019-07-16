@@ -142,7 +142,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -150,7 +150,7 @@ int main(void)
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 	osThreadDef(simulateTask, thread_entry_Simulation, osPriorityNormal, 0,
-			configMINIMAL_STACK_SIZE);
+			configMINIMAL_STACK_SIZE * 2);
 	simulateTaskHandle = osThreadCreate(osThread(simulateTask), NULL);
 
 	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0,
@@ -346,12 +346,12 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PB0 PB1 PB2 PB10 
                            PB11 PB12 PB13 PB14 
-                           PB15 PB3 PB4 PB5 
-                           PB6 PB7 PB8 PB9 */
+                           PB15 PB4 PB5 PB6 
+                           PB7 PB8 PB9 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
                           |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14 
-                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5 
-                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+                          |GPIO_PIN_15|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6 
+                          |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

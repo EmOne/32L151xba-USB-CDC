@@ -56,6 +56,7 @@ BOOL xMBMasterPortTimersInit(USHORT usTimeOut50us)
 //	xMasterTimerRunRes = xSemaphoreCreateBinary();
     /* backup T35 ticks */
     usT35TimeOut50us = usTimeOut50us;
+
 #ifdef SW_TIMER
 ////    rt_timer_init(&timer, "master timer",
 ////                   timer_timeout_ind, /* bind timeout callback function */
@@ -63,8 +64,9 @@ BOOL xMBMasterPortTimersInit(USHORT usTimeOut50us)
 ////                   (50 * usT35TimeOut50us) / (1000 * 1000 / RT_TICK_PER_SECOND) + 1,
 ////                   RT_TIMER_FLAG_ONE_SHOT); /* one shot */
 //
+    TickType_t xTimeInTicks = pdMS_TO_TICKS(( 50 * usTimeOut50us ) / TICK_PER_SECOND );
     timer = xTimerCreate ("master timer",
-    		pdMS_TO_TICKS((50 * usT35TimeOut50us) / (1000 * 1000 / TICK_PER_SECOND) + 1),
+    		xTimeInTicks + 1,
     		/* Setting uxAutoRealod to pdFALSE creates a one-shot software timer. */
     		pdFALSE,
     		/* This example does not use the timer id. */
@@ -114,14 +116,14 @@ void vMBMasterPortTimersConvertDelayEnable()
     /* Set current timer mode, don't change it.*/
     vMBMasterSetCurTimerMode(MB_TMODE_CONVERT_DELAY);
 #ifdef SW_TIMER
-    const TickType_t timer_tick = MB_MASTER_DELAY_MS_CONVERT * TICK_PER_SECOND / 1000;
+    const TickType_t timer_tick = pdMS_TO_TICKS( MB_MASTER_DELAY_MS_CONVERT );
     xTimerChangePeriod(timer, timer_tick, 0);
 
     xTimerStart( timer, 0 );
 #else
     htim7.Init.Period = MB_MASTER_DELAY_MS_CONVERT - 1;
 	HAL_TIM_Base_Init(&htim7);
-	downcounterMaster = usT35TimeOut50us;
+
 	HAL_TIM_Base_Start_IT(&htim7);
 #endif
 }
@@ -131,13 +133,14 @@ void vMBMasterPortTimersRespondTimeoutEnable()
     /* Set current timer mode, don't change it.*/
     vMBMasterSetCurTimerMode(MB_TMODE_RESPOND_TIMEOUT);
 #ifdef SW_TIMER
-	const TickType_t timer_tick = MB_MASTER_TIMEOUT_MS_RESPOND * TICK_PER_SECOND / 1000;
+	const TickType_t timer_tick = pdMS_TO_TICKS( MB_MASTER_TIMEOUT_MS_RESPOND );
     xTimerChangePeriod(timer, timer_tick, 0);
 //
     xTimerStart( timer, 0 );
 #else
     htim7.Init.Period = MB_MASTER_TIMEOUT_MS_RESPOND - 1;
 	HAL_TIM_Base_Init(&htim7);
+
     HAL_TIM_Base_Start_IT(&htim7);
 #endif
 }
