@@ -82,7 +82,7 @@ void thread_entry_Simulation(void const * argument) {
 //		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,-1);
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
 //		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
-		errorCode = eMBMasterReqReadInputRegister(1, 0, 10, 1000);
+		errorCode = eMBMasterReqReadInputRegister(1, 0, 10, 10);
 //		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
 //		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
 //		errorCode = eMBMasterReqReadHoldingRegister(1,3,2,-1);
