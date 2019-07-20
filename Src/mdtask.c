@@ -56,11 +56,16 @@ void thread_entry_Simulation(void const * argument) {
 	eMBMasterReqErrCode errorCode = MB_MRE_NO_ERR;
 	uint16_t errorCount = 0;
 
+	UCHAR ucSndAddr = 1;
+	USHORT usRegAddr = 0;
+	USHORT usNRegs = 8;
+	TickType_t tInterval = pdMS_TO_TICKS(5000);
+
 	traceTASK_SWITCHED_IN()
 	;
 
 	for (;;) {
-		vTaskDelay(1);
+		vTaskDelay(tInterval);
 		CpuUsageMajor = osGetCPUUsage();
 		if (CpuUsageMajor > CpuUsageMinor) {
 			CpuUsageMinor = CpuUsageMajor;
@@ -82,7 +87,7 @@ void thread_entry_Simulation(void const * argument) {
 //		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,-1);
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
 //		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
-		errorCode = eMBMasterReqReadInputRegister(1, 0, 10, 10);
+		errorCode = eMBMasterReqReadInputRegister(ucSndAddr, usRegAddr, usNRegs, 10);
 //		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
 //		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
 //		errorCode = eMBMasterReqReadHoldingRegister(1,3,2,-1);
@@ -90,6 +95,8 @@ void thread_entry_Simulation(void const * argument) {
 
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;
+		} else {
+			CDC_Transmit_FS(&usMRegInBuf[ucSndAddr - 1], usNRegs);
 		}
 	}
 }
