@@ -27,7 +27,7 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,7 +40,7 @@
 /* USER CODE END PV */
 
 PCD_HandleTypeDef hpcd_USB_FS;
-void Error_Handler(void);
+//void Error_Handler(void);
 
 /* USER CODE BEGIN 0 */
 

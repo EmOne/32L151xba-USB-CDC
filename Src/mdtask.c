@@ -5,9 +5,10 @@
 #include "mbport.h"
 #include "user_mb_app.h"
 #include "cpu_utils.h"
+#include "usbd_cdc_if.h"
 
-USHORT usModbusUserData[MB_PDU_SIZE_MAX];
-UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
+//USHORT usModbusUserData[MB_PDU_SIZE_MAX];
+//UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
 
 __ALIGNED(portBYTE_ALIGNMENT)
 #if MB_SLAVE_RTU_ENABLED > 0 || MB_SLAVE_ASCII_ENABLED > 0
@@ -58,7 +59,7 @@ void thread_entry_Simulation(void const * argument) {
 
 	UCHAR ucSndAddr = 1;
 	USHORT usRegAddr = 0;
-	USHORT usNRegs = 8;
+	USHORT usNRegs = 6;
 	TickType_t tInterval = pdMS_TO_TICKS(5000);
 
 	traceTASK_SWITCHED_IN()
@@ -80,9 +81,9 @@ void thread_entry_Simulation(void const * argument) {
 //		rt_thread_delay(DELAY_SYS_RUN_LED);
 //		IWDG_Feed(); //feed the dog
 		//Test Modbus Master
-		usModbusUserData[0] = (USHORT) (HAL_GetTick() / 10);
-		usModbusUserData[1] = (USHORT) (HAL_GetTick() % 10);
-		ucModbusUserData[0] = 0x1F;
+//		usModbusUserData[0] = (USHORT) (HAL_GetTick() / 10);
+//		usModbusUserData[1] = (USHORT) (HAL_GetTick() % 10);
+//		ucModbusUserData[0] = 0x1F;
 //		errorCode = eMBMasterReqReadDiscreteInputs(1,3,8,-1);
 //		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,-1);
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
@@ -96,7 +97,7 @@ void thread_entry_Simulation(void const * argument) {
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;
 		} else {
-			CDC_Transmit_FS(&usMRegInBuf[ucSndAddr - 1], usNRegs);
+			CDC_Transmit_FS((uint8_t *) &usMRegInBuf[ucSndAddr - 1], usNRegs);
 		}
 	}
 }
