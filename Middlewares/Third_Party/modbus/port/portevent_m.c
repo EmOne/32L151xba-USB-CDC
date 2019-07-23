@@ -21,7 +21,7 @@
  */
 
 /* ----------------------- Platform includes --------------------------------*/
-#include "port.h"
+#include <port.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "event_groups.h"
@@ -54,14 +54,15 @@ xMBMasterPortEventInit( void )
 BOOL
 xMBMasterPortEventPost( eMBMasterEventType eEvent )
 {
-	xEventMasterInQueue = TRUE;
-	eQueuedMasterEvent = eEvent;
-	xEventGroupClearBits(xMasterOsEvent, 0x1FF);
-	EventBits_t uxBitSet = xEventGroupSetBits(xMasterOsEvent, eEvent);
-	if (uxBitSet) {
-
-	}
-	return TRUE;
+//	xEventMasterInQueue = TRUE;
+//	eQueuedMasterEvent = eEvent;
+//	xEventGroupClearBitsFromISR(xMasterOsEvent, 0x1FF);
+//	EventBits_t uxBitSet = xEventGroupSetBits(xMasterOsEvent, eEvent);
+//	if (uxBitSet) {
+//
+//	}
+//	return TRUE;
+	return xMBMasterPortEventPostFromISR(eEvent);
 }
 
 BOOL
@@ -119,12 +120,14 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent )
     }
 
 	if (xEventMasterInQueue) {
+		*eEvent = eQueuedMasterEvent;
 		xEventMasterInQueue = FALSE;
 		xEventHappened = TRUE;
 	}
 
 	return xEventHappened;
 }
+
 /**
  * This function is initialize the OS resource for modbus master.
  * Note:The resource is define by OS.If you not use OS this function can be empty.
@@ -151,6 +154,9 @@ BOOL xMBMasterRunResTake( LONG lTimeOut )
 	if(xMasterRunRes == NULL) {
 		vMBMasterOsResInit();
 	}
+
+	if(xMasterRunRes == NULL)
+		return TRUE;
     /*If waiting time is -1 .It will wait forever */
     return xSemaphoreTake(xMasterRunRes, lTimeOut) ? FALSE : TRUE ;
 }
@@ -182,7 +188,8 @@ void xMBMasterRunResGiveFromISR( void )
 void vMBMasterRunResRelease( void )
 {
     /* release resource */
-	xSemaphoreGive(xMasterRunRes);
+	if(xMasterRunRes != NULL)
+		xSemaphoreGive(xMasterRunRes);
 }
 
 /**

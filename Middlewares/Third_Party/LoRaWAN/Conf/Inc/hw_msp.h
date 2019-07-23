@@ -49,7 +49,11 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define BAT_CR2032               ((uint32_t) 3000)        
 #define VDD_BAT                  BAT_CR2032     
 #define VDD_MIN                  1800
-
+#define ADC_MAX_VALUE                               4095
+/*!
+ * VREF bandgap value
+ */
+#define ADC_VREF_BANDGAP                            1224 // mV
 /* External variables --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 
@@ -175,7 +179,7 @@ uint16_t HW_AdcReadChannel( uint32_t Channel);
  * \param none
  * \retval none
  */
-void SystemClock_Config( void );
+//void SystemClock_Config( void );
 
 /**
   * @brief  Configure all GPIO's to Analog input to reduce the power consumption

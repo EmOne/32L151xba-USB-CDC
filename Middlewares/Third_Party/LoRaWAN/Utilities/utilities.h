@@ -34,7 +34,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define __UTILITIES_H__
 
 
-//#include "hw_conf.h"
+#include <port.h>
+#include "hw_conf.h"
 #include "main.h"
 #include "trace.h"
 /* BACKUP_PRIMASK MUST be implemented at the begining of the funtion 
@@ -46,10 +47,14 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define ENABLE_IRQ() __enable_irq()
 #define RESTORE_PRIMASK() __set_PRIMASK(primask_bit)
 
-
+#if 0
 #define CRITICAL_SECTION_BEGIN( )     uint32_t primask_bit= __get_PRIMASK();\
                                     __disable_irq()
 #define CRITICAL_SECTION_END( )   __set_PRIMASK(primask_bit)
+#else
+#define CRITICAL_SECTION_BEGIN( ) ENTER_CRITICAL_SECTION ( )
+#define CRITICAL_SECTION_END( )   EXIT_CRITICAL_SECTION ( )
+#endif
 
 #define LOG(...)     do{ TraceSend(__VA_ARGS__); }while(0);
 

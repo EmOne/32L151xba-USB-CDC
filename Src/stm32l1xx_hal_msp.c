@@ -22,6 +22,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 /* USER CODE BEGIN Includes */
+#include "hw.h"
+#include "timeServer.h"
+/* when fast wake up is enabled, the mcu wakes up in ~20us  * and
+ * does not wait for the VREFINT to be settled. THis is ok for
+ * most of the case except when adc must be used in this case before
+ *starting the adc, you must make sure VREFINT is settled*/
+#define ENABLE_FAST_WAKEUP
 
 /* USER CODE END Includes */
 
@@ -56,7 +63,15 @@
 /* USER CODE END ExternalFunctions */
 
 /* USER CODE BEGIN 0 */
-
+/**
+  * @brief This function provides delay (in ms)
+  * @param Delay: specifies the delay time length, in milliseconds.
+  * @retval None
+  */
+void HAL_Delay(__IO uint32_t Delay)
+{
+  HW_RTC_DelayMs( Delay ); /* based on RTC */
+}
 /* USER CODE END 0 */
 /**
   * Initializes the Global MSP.
@@ -76,7 +91,17 @@ void HAL_MspInit(void)
   HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
 
   /* USER CODE BEGIN MspInit 1 */
+  /* Disable the Power Voltage Detector */
+    HAL_PWR_DisablePVD( );
 
+    /* Set MCU in ULP (Ultra Low Power) */
+    HAL_PWREx_EnableUltraLowPower( );
+  #ifdef ENABLE_FAST_WAKEUP
+    /*Disable fast wakeUp*/
+    HAL_PWREx_EnableFastWakeUp( );
+  #else
+    HAL_PWREx_DisableFastWakeUp( );
+  #endif
   /* USER CODE END MspInit 1 */
 }
 
@@ -135,12 +160,30 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* hrtc)
   if(hrtc->Instance==RTC)
   {
   /* USER CODE BEGIN RTC_MspInit 0 */
+		RCC_OscInitTypeDef RCC_OscInitStruct;
+		RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
+		/*##-1- Configue the RTC clock soucre ######################################*/
+		/* -a- Enable LSE Oscillator */
+		RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+		RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+		RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+		if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+			Error_Handler();
+		}
+
+		/* -b- Select LSI as RTC clock source */
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+		PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+		if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+			Error_Handler();
+		}
   /* USER CODE END RTC_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_RTC_ENABLE();
   /* USER CODE BEGIN RTC_MspInit 1 */
-
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   /* USER CODE END RTC_MspInit 1 */
   }
 
@@ -350,6 +393,26 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 }
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief  EXTI line detection callbacks.
+  * @param  GPIO_Pin: Specifies the pins connected to the EXTI line.
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  HW_GPIO_IrqHandler( GPIO_Pin );
+}
+
+/**
+  * @brief  Alarm A callback.
+  * @param  hrtc: RTC handle
+  * @retval None
+  */
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  TimerIrqHandler( );
+}
+
 /**
   * @brief  Gets IRQ number as a function of the GPIO_Pin.
   * @param  GPIO_Pin: Specifies the pins connected to the EXTI line.

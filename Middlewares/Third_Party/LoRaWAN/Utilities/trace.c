@@ -21,8 +21,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <util_queue.h>
+#include "hw.h"
 #include "utilities.h"
-#include "queue.h"
 #include "trace.h"
 #include "low_power_manager.h"
 #include "debug.h"
@@ -69,9 +70,11 @@ int32_t TraceSend( const char *strFormat, ...)
   va_end(vaArgs);
   int status=0;
   
-  BACKUP_PRIMASK();
-  
-  DISABLE_IRQ(); /**< Disable all interrupts by setting PRIMASK bit on Cortex*/
+//  BACKUP_PRIMASK();
+//
+//  DISABLE_IRQ(); /**< Disable all interrupts by setting PRIMASK bit on Cortex*/
+//  ENTER_CRITICAL_SECTION();
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
   //DBG_GPIO_SET(GPIOB, GPIO_PIN_15);
   //DBG_GPIO_RST(GPIOB, GPIO_PIN_15);
   status =circular_queue_add(&MsgTraceQueue,(uint8_t*)buf, bufSize);
@@ -83,12 +86,12 @@ int32_t TraceSend( const char *strFormat, ...)
     //DBG_GPIO_RST(GPIOB, GPIO_PIN_12);
     LPM_SetStopMode(LPM_UART_TX_Id , LPM_Disable );
 
-    RESTORE_PRIMASK();
+    taskEXIT_CRITICAL_FROM_ISR(ulMask);
     OutputTrace(buffer, bufSize);
   }
   else
   {
-    RESTORE_PRIMASK();
+	  taskEXIT_CRITICAL_FROM_ISR(ulMask);
   }
   
   return status;
@@ -118,9 +121,11 @@ static void Trace_TxCpltCallback(void)
   uint8_t* buffer;
   uint16_t bufSize;
 
-  BACKUP_PRIMASK();
-
-  DISABLE_IRQ(); /**< Disable all interrupts by setting PRIMASK bit on Cortex*/
+//  BACKUP_PRIMASK();
+//
+//  DISABLE_IRQ(); /**< Disable all interrupts by setting PRIMASK bit on Cortex*/
+//  ENTER_CRITICAL_SECTION( );
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
   /* Remove element just sent to UART */
   circular_queue_remove(&MsgTraceQueue);
   //DBG_GPIO_SET(GPIOB, GPIO_PIN_13);
@@ -131,7 +136,7 @@ static void Trace_TxCpltCallback(void)
   if ( status == 0) 
   {
     circular_queue_get(&MsgTraceQueue,&buffer,&bufSize);
-    RESTORE_PRIMASK();
+    taskEXIT_CRITICAL_FROM_ISR(ulMask);
     //DBG_GPIO_SET(GPIOB, GPIO_PIN_14);
     //DBG_GPIO_RST(GPIOB, GPIO_PIN_14);
     OutputTrace(buffer, bufSize);
@@ -142,7 +147,7 @@ static void Trace_TxCpltCallback(void)
 
     LPM_SetStopMode(LPM_UART_TX_Id , LPM_Enable );
     TracePeripheralReady = SET;
-    RESTORE_PRIMASK();
+    taskEXIT_CRITICAL_FROM_ISR(ulMask);
   }
 }
 

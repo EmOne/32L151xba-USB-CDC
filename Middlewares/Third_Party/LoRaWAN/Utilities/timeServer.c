@@ -58,6 +58,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
  * Timers list head pointer
  */
 static TimerEvent_t *TimerListHead = NULL;
+static SemaphoreHandle_t xTimeServerRunRes;
 
 /*!
  * \brief Adds or replace the head timer of the list.
@@ -96,6 +97,62 @@ static void TimerSetTimeout( TimerEvent_t *obj );
  */
 static bool TimerExists( TimerEvent_t *obj );
 
+/**
+ * This function is initialize the OS resource for modbus master.
+ * Note:The resource is define by OS.If you not use OS this function can be empty.
+ *
+ */
+void vTimerServerOsResInit( void )
+{
+	if(xTimeServerRunRes == NULL) {
+		/* Attempt to create a semaphore. */
+		xTimeServerRunRes = xSemaphoreCreateBinary();
+	}
+}
+
+/**
+ * This function is take time Server running resource.
+ * Note:The resource is define by Operating System.If you not use OS this function can be just return TRUE.
+ *
+ * @param lTimeOut the waiting time.
+ *
+ * @return resource taked result
+ */
+BOOL xTimeServerRunResTake( LONG lTimeOut )
+{
+	if(xTimeServerRunRes == NULL) {
+		vTimerServerOsResInit();
+	}
+	if(xTimeServerRunRes == NULL)
+		return TRUE;
+    /*If waiting time is -1 .It will wait forever */
+    return xSemaphoreTake(xTimeServerRunRes, lTimeOut) ? FALSE : TRUE ;
+}
+
+/**
+ * This function is release Mobus Master running resource.
+ * Note:The resource is define by Operating System.If you not use OS this function can be empty.
+ *
+ */
+void vTimeServerRunResRelease( void )
+{
+	if(xTimeServerRunRes == NULL)
+		return;
+    /* release resource */
+	xSemaphoreGive(xTimeServerRunRes);
+}
+
+void xTimeServerRunResGiveFromISR( void )
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	/* 'Give' the semaphore to unblock the task, passing in the address of
+	xHigherPriorityTaskWoken as the interrupt safe API function's
+	pxHigherPriorityTaskWoken parameter. */
+
+	xSemaphoreGiveFromISR(xTimeServerRunRes, &xHigherPriorityTaskWoken );
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+}
+
 void TimerInit( TimerEvent_t *obj, void ( *callback )( void *context ) )
 {
   obj->Timestamp = 0;
@@ -105,6 +162,7 @@ void TimerInit( TimerEvent_t *obj, void ( *callback )( void *context ) )
   obj->Callback = callback;
   obj->Context = NULL;
   obj->Next = NULL;
+//  vTimerServerOsResInit();
 }
 
 void TimerSetContext( TimerEvent_t *obj, void* context )
@@ -116,14 +174,17 @@ void TimerStart( TimerEvent_t *obj )
 {
   uint32_t elapsedTime = 0;
   
-  BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
-  
+//  BACKUP_PRIMASK();
+//
+//  DISABLE_IRQ( );
+//  ENTER_CRITICAL_SECTION();
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
 
   if( ( obj == NULL ) || ( TimerExists( obj ) == true ) )
   {
-    RESTORE_PRIMASK( );
+//      RESTORE_PRIMASK( );
+//	EXIT_CRITICAL_SECTION();
+	  taskEXIT_CRITICAL_FROM_ISR(ulMask);
     return;
   }
   obj->Timestamp = obj->ReloadValue;
@@ -149,7 +210,9 @@ void TimerStart( TimerEvent_t *obj )
       TimerInsertTimer( obj);
     }
   }
-  RESTORE_PRIMASK( );
+//    RESTORE_PRIMASK( );
+//  EXIT_CRITICAL_SECTION();
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
 }
 
 
@@ -164,7 +227,7 @@ void TimerIrqHandler( void )
   TimerEvent_t* cur;
   TimerEvent_t* next;
   
-
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
   
   uint32_t old =  HW_RTC_GetTimerContext( );
   uint32_t now =  HW_RTC_SetTimerContext( );
@@ -212,21 +275,25 @@ void TimerIrqHandler( void )
   {
     TimerSetTimeout( TimerListHead );
   }
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
 }
 
 void TimerStop( TimerEvent_t *obj ) 
 {
-  BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
-  
+//  BACKUP_PRIMASK();
+//
+//  DISABLE_IRQ( );
+//  ENTER_CRITICAL_SECTION();
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
   TimerEvent_t* prev = TimerListHead;
   TimerEvent_t* cur = TimerListHead;
 
   // List is empty or the Obj to stop does not exist 
   if( ( TimerListHead == NULL ) || ( obj == NULL ) )
   {
-    RESTORE_PRIMASK( );
+//    RESTORE_PRIMASK( );
+//    EXIT_CRITICAL_SECTION();
+    taskEXIT_CRITICAL_FROM_ISR(ulMask);
     return;
   }
 
@@ -287,11 +354,11 @@ void TimerStop( TimerEvent_t *obj )
     }   
   }
   
-  RESTORE_PRIMASK( );
+//  RESTORE_PRIMASK( );
+//  EXIT_CRITICAL_SECTION();
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
 }  
   
-
-
 void TimerReset( TimerEvent_t *obj )
 {
   TimerStop( obj );

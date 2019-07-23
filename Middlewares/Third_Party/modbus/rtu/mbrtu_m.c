@@ -29,13 +29,11 @@
  */
 
 /* ----------------------- System includes ----------------------------------*/
+#include <port.h>
 #include "stdlib.h"
 #include "string.h"
 
 /* ----------------------- Platform includes --------------------------------*/
-#include "port.h"
-
-/* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mb_m.h"
 #include "mbrtu.h"

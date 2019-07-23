@@ -18,7 +18,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "port.h"
+#include <port.h>
 #include "low_power_manager.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,8 +33,8 @@ static uint32_t OffModeDisable = 0;
 /* Functions Definition ------------------------------------------------------*/
 void LPM_SetOffMode(LPM_Id_t id, LPM_SetMode_t mode)
 {
-  ENTER_CRITICAL_SECTION( );
-  
+//  ENTER_CRITICAL_SECTION( );
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
   switch(mode)
   {
     case LPM_Disable:
@@ -51,14 +51,15 @@ void LPM_SetOffMode(LPM_Id_t id, LPM_SetMode_t mode)
       break;
   }
   
-  EXIT_CRITICAL_SECTION( );
-
+//  EXIT_CRITICAL_SECTION( );
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
   return;
 }
 
 void LPM_SetStopMode(LPM_Id_t id, LPM_SetMode_t mode)
 {
-  ENTER_CRITICAL_SECTION( );
+	//  ENTER_CRITICAL_SECTION( );
+	uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
 
   switch(mode)
   {
@@ -75,8 +76,8 @@ void LPM_SetStopMode(LPM_Id_t id, LPM_SetMode_t mode)
     default:
       break;
   }
-  EXIT_CRITICAL_SECTION( );
-
+//  EXIT_CRITICAL_SECTION( );
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
   return;
 }
 
@@ -117,7 +118,8 @@ LPM_GetMode_t LPM_GetMode(void)
 {
   LPM_GetMode_t mode_selected;
 
-  ENTER_CRITICAL_SECTION( );
+//  ENTER_CRITICAL_SECTION( );
+  uint32_t ulMask = taskENTER_CRITICAL_FROM_ISR();
 
   if(StopModeDisable )
   {
@@ -135,8 +137,8 @@ LPM_GetMode_t LPM_GetMode(void)
     }
   }
 
-  ENTER_CRITICAL_SECTION( );
-
+//  EXIT_CRITICAL_SECTION( );
+  taskEXIT_CRITICAL_FROM_ISR(ulMask);
   return mode_selected;
 }
 

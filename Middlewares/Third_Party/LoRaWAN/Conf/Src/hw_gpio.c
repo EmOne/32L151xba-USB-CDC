@@ -110,10 +110,13 @@ void HW_GPIO_SetIrq( GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t prio,  Gpi
 void HW_GPIO_IrqHandler( uint16_t GPIO_Pin )
 {
   uint32_t BitPos = HW_GPIO_GetBitPos( GPIO_Pin );
+  uint32_t ulMask;
   
   if ( GpioIrq[ BitPos ]  != NULL)
   {
+	ulMask = taskENTER_CRITICAL_FROM_ISR();
     GpioIrq[ BitPos ] ( NULL );
+    taskEXIT_CRITICAL_FROM_ISR(ulMask);
   }
 }
 

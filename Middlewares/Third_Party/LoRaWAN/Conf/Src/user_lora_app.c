@@ -18,9 +18,6 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "cmsis_os.h"
-
 #include "hw.h"
 #include "low_power_manager.h"
 #include "lora.h"
@@ -64,7 +61,7 @@
 /*!
  * LoRaWAN default endNode class port
  */
-#define LORAWAN_DEFAULT_CLASS                       CLASS_A
+#define LORAWAN_DEFAULT_CLASS                       CLASS_C
 /*!
  * LoRaWAN default confirm state
  */
@@ -72,7 +69,7 @@
 /*!
  * User application data buffer size
  */
-#define LORAWAN_APP_DATA_BUFF_SIZE                           64
+#define LORAWAN_APP_DATA_BUFF_SIZE                           16
 /*!
  * User application data
  */
@@ -183,33 +180,43 @@ void thread_entry_LoRaPoll(void const * argument)
   
   for(;;)
   {
-    if (AppProcessRequest==LORA_SET)
-    {
-      /*reset notification flag*/
-      AppProcessRequest=LORA_RESET;
-	  /*Send*/
-      Send( NULL );
-    }
-	if (LoraMacProcessRequest==LORA_SET)
-    {
-      /*reset notification flag*/
-      LoraMacProcessRequest=LORA_RESET;
-      LoRaMacProcess( );
-    }
-    /*If a flag is set at this point, mcu must not enter low power and must loop*/
-    DISABLE_IRQ( );
-    
-    /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending 
-     * and cortex will not enter low power anyway  */
-    if ((LoraMacProcessRequest!=LORA_SET) && (AppProcessRequest!=LORA_SET))
-    {
-#ifndef LOW_POWER_DISABLE
-      LPM_EnterLowPower( );
-#endif
-    }
+	vTaskDelay(1);
+//	if(xTimeServerRunResTake(portMAX_DELAY) == pdPASS)
+	{
 
-    ENABLE_IRQ();
-    
+		if (AppProcessRequest==LORA_SET)
+		{
+		  /*reset notification flag*/
+		  AppProcessRequest=LORA_RESET;
+		  /*Send*/
+		  Send( NULL );
+
+		}
+		if (LoraMacProcessRequest==LORA_SET)
+		{
+		  /*reset notification flag*/
+		  LoraMacProcessRequest=LORA_RESET;
+		  LoRaMacProcess( );
+
+		}
+		/*If a flag is set at this point, mcu must not enter low power and must loop*/
+//	    DISABLE_IRQ( );
+	    CRITICAL_SECTION_BEGIN( );
+//
+//	    /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending
+//	     * and cortex will not enter low power anyway  */
+	    if ((LoraMacProcessRequest!=LORA_SET) && (AppProcessRequest!=LORA_SET))
+	    {
+//	#ifndef LOW_POWER_DISABLE
+//	      LPM_EnterLowPower( );
+//	#endif
+	    	vTimeServerRunResRelease();
+	    }
+//
+//	    ENABLE_IRQ();
+	    CRITICAL_SECTION_END( );
+
+	}
     /* USER CODE BEGIN 2 */
     /* USER CODE END 2 */
   }
@@ -246,7 +253,7 @@ static void Send( void* context )
     return;
   }
   
-  TVL1(PRINTF("SEND REQUEST\n\r");)
+  TVL1(PRINTF("SEND REQUEST\n\r"););
 #ifndef CAYENNE_LPP
   int32_t latitude, longitude = 0;
   uint16_t altitudeGps = 0;

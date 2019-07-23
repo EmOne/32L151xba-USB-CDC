@@ -49,24 +49,24 @@ Maintainer: Miguel Luis and Gregory Cristian
  */
 
  /* Internal voltage reference, parameter VREFINT_CAL*/
-#define VREFINT_CAL       ((uint16_t*) ((uint32_t) 0x1FF800F8))
+#define VREFINT_CAL        ( (uint16_t*) ((uint32_t) 0x1FF800F8))
 #define LORAWAN_MAX_BAT   254
 
 
 /* Internal temperature sensor: constants data used for indicative values in  */
 /* this example. Refer to device datasheet for min/typ/max values.            */
 
-/* Internal temperature sensor, parameter TS_CAL1: TS ADC raw data acquired at 
+/* Internal temperature sensor, parameter TS_CAL1: TS ADC raw data acquired at
  *a temperature of 110 DegC (+-5 DegC), VDDA = 3.3 V (+-10 mV). */
-#define TEMP30_CAL_ADDR   ((uint16_t*) ((uint32_t) 0x1FF800FA))
+#define TEMP30_CAL_ADDR    ( (uint16_t*) ((uint32_t) 0x1FF800FA))
 
-/* Internal temperature sensor, parameter TS_CAL2: TS ADC raw data acquired at 
+/* Internal temperature sensor, parameter TS_CAL2: TS ADC raw data acquired at
  *a temperature of  30 DegC (+-5 DegC), VDDA = 3.3 V (+-10 mV). */
-#define TEMP110_CAL_ADDR  ((uint16_t*) ((uint32_t) 0x1FF800FE))
+#define TEMP110_CAL_ADDR   ( (uint16_t*) ((uint32_t) 0x1FF800FE))
 
-/* Vdda value with which temperature sensor has been calibrated in production 
+/* Vdda value with which temperature sensor has been calibrated in production
    (+-10 mV). */
-#define VDDA_TEMP_CAL                  ((uint32_t) 3000)        
+#define VDDA_TEMP_CAL                  ((uint32_t) 3000)
 
 
 #define COMPUTE_TEMPERATURE(TS_ADC_DATA, VDDA_APPLI)                           \
@@ -105,13 +105,13 @@ void HW_Init( void )
     HW_AdcInit( );
 
     Radio.IoInit( );
-    
+
     HW_SPI_Init( );
 
     HW_RTC_Init( );
-    
+
     TraceInit( );
-    
+
     BSP_sensor_Init( );
 
     McuInitialized = true;
@@ -126,11 +126,11 @@ void HW_Init( void )
 void HW_DeInit( void )
 {
   HW_SPI_DeInit( );
-  
+
   Radio.IoDeInit( );
-  
+
   vcom_DeInit( );
-   
+
   McuInitialized = false;
 }
 
@@ -142,9 +142,9 @@ void HW_DeInit( void )
 static void HW_IoInit( void )
 {
   HW_SPI_IoInit( );
-  
+
   Radio.IoInit( );
-  
+
   vcom_IoInit( );
 }
 
@@ -156,9 +156,9 @@ static void HW_IoInit( void )
 static void HW_IoDeInit( void )
 {
   HW_SPI_IoDeInit( );
-  
+
   Radio.IoDeInit( );
-  
+
   vcom_IoDeInit( );
 }
 
@@ -185,7 +185,7 @@ void HW_GpioInit(void)
   /* All GPIOs except debug pins (SWCLK and SWD) */
   GPIO_InitStruct.Pin = GPIO_PIN_All & (~( GPIO_PIN_13 | GPIO_PIN_14) );
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  
+
   /* All GPIOs */
   GPIO_InitStruct.Pin = GPIO_PIN_All;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -293,13 +293,13 @@ void HW_GetUniqueId( uint8_t *id )
     id[0] = ( ( *( uint32_t* )ID2 ) );
 }
 
-uint16_t HW_GetTemperatureLevel( void ) 
+uint16_t HW_GetTemperatureLevel( void )
 {
-  uint16_t measuredLevel =0; 
+  uint16_t measuredLevel =0;
   uint32_t batteryLevelmV;
   uint16_t temperatureDegreeC;
 
-  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_VREFINT ); 
+  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_VREFINT );
 
   if (measuredLevel ==0)
   {
@@ -309,22 +309,22 @@ uint16_t HW_GetTemperatureLevel( void )
   {
     batteryLevelmV= (( (uint32_t) VDDA_VREFINT_CAL * (*VREFINT_CAL ) )/ measuredLevel);
   }
-#if 0  
+#if 0
   PRINTF("VDDA= %d\n\r", batteryLevelmV);
 #endif
-  
-  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_TEMPSENSOR ); 
-  
+
+  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_TEMPSENSOR );
+
   temperatureDegreeC = COMPUTE_TEMPERATURE( measuredLevel, batteryLevelmV);
 
-#if 0 
+#if 0
   {
     uint16_t temperatureDegreeC_Int= (temperatureDegreeC)>>8;
-    uint16_t temperatureDegreeC_Frac= ((temperatureDegreeC-(temperatureDegreeC_Int<<8))*100)>>8;  
+    uint16_t temperatureDegreeC_Frac= ((temperatureDegreeC-(temperatureDegreeC_Int<<8))*100)>>8;
     PRINTF("temp= %d, %d,%d\n\r", temperatureDegreeC, temperatureDegreeC_Int, temperatureDegreeC_Frac);
   }
 #endif
-  
+
   return (uint16_t) temperatureDegreeC;
 }
 /**
@@ -332,13 +332,13 @@ uint16_t HW_GetTemperatureLevel( void )
   * @param none
   * @retval the battery level  1 (very low) to 254 (fully charged)
   */
-uint8_t HW_GetBatteryLevel( void ) 
+uint8_t HW_GetBatteryLevel( void )
 {
   uint8_t batteryLevel = 0;
   uint16_t measuredLevel = 0;
   uint32_t batteryLevelmV;
 
-  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_VREFINT ); 
+  measuredLevel = HW_AdcReadChannel( ADC_CHANNEL_VREFINT );
 
   if (measuredLevel == 0)
   {
@@ -346,7 +346,9 @@ uint8_t HW_GetBatteryLevel( void )
   }
   else
   {
-    batteryLevelmV= (( (uint32_t) VDDA_VREFINT_CAL * (*VREFINT_CAL ) )/ measuredLevel);
+	  batteryLevelmV= ( uint32_t )ADC_VREF_BANDGAP * ( uint32_t )ADC_MAX_VALUE;
+	  batteryLevelmV = batteryLevelmV / ( uint32_t )measuredLevel;
+//    batteryLevelmV= (( (uint32_t) VDDA_VREFINT_CAL * (* VREFINT_CAL ) )/ measuredLevel);
   }
 
   if (batteryLevelmV > VDD_BAT)
@@ -359,7 +361,7 @@ uint8_t HW_GetBatteryLevel( void )
   }
   else
   {
-    batteryLevel = (( (uint32_t) (batteryLevelmV - VDD_MIN)*LORAWAN_MAX_BAT) /(VDD_BAT-VDD_MIN) ); 
+    batteryLevel = (( (uint32_t) (batteryLevelmV - VDD_MIN)*LORAWAN_MAX_BAT) /(VDD_BAT-VDD_MIN) );
   }
   return batteryLevel;
 }
@@ -374,22 +376,22 @@ void HW_AdcInit( void )
   if( AdcInitialized == false )
   {
     AdcInitialized = true;
-    
+
     hadc.Instance  = ADC1;
-    
+
     hadc.Init.ClockPrescaler =ADC_CLOCK_ASYNC_DIV4;
     hadc.Init.Resolution =ADC_RESOLUTION_12B;
     hadc.Init.ScanConvMode=ADC_SCAN_DISABLE;
     /* hadc.Init.NbrOfConversion =1; not required since ADC_SCAN_DISABLE */
-    hadc.Init.ContinuousConvMode = DISABLE;		
+    hadc.Init.ContinuousConvMode = DISABLE;
     hadc.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    
+
     hadc.Init.LowPowerAutoWait= ADC_AUTOWAIT_UNTIL_DATA_READ; /* ADC_DelaySelectionConfig( ADC1, ADC_DelayLength_Freeze ); */
     hadc.Init.LowPowerAutoPowerOff= ADC_AUTOPOWEROFF_IDLE_DELAY_PHASES;
-  
- 
+
+
     ADCCLK_ENABLE();
-    
+
     HAL_ADC_Init( &hadc );
   }
 }
@@ -413,35 +415,35 @@ uint16_t HW_AdcReadChannel( uint32_t Channel )
 {
 
   ADC_ChannelConfTypeDef adcConf;
-  
+
   uint16_t adcData = 0;
-  
+
   HW_AdcInit();
 
   if( AdcInitialized == true )
   {
     /* wait the the Vrefint used by adc is set */
     while (__HAL_PWR_GET_FLAG(PWR_FLAG_VREFINTRDY) == RESET) {};
-      
+
     ADCCLK_ENABLE();
-    
+
 //    /* Deselects all channels*/
 //    adcConf.Channel = ADC_CHANNEL_MASK;
-//    adcConf.Rank = ADC_RANK_NONE; 
+//    adcConf.Rank = ADC_RANK_NONE;
 //    HAL_ADC_ConfigChannel( hadc, &adcConf);
-      
+
     /* configure adc channel */
     adcConf.Channel = Channel;
-    adcConf.Rank = ADC_REGULAR_RANK_1; 
+    adcConf.Rank = ADC_REGULAR_RANK_1;
     adcConf.SamplingTime =ADC_SAMPLETIME_192CYCLES;
     HAL_ADC_ConfigChannel( &hadc, &adcConf);
 
     /* Start the conversion process */
     HAL_ADC_Start( &hadc);
-      
+
     /* Wait for the end of conversion */
     HAL_ADC_PollForConversion( &hadc, HAL_MAX_DELAY );
-      
+
     /* Get the converted value of regular channel */
     adcData = HAL_ADC_GetValue ( &hadc);
 
@@ -460,18 +462,16 @@ uint16_t HW_AdcReadChannel( uint32_t Channel )
   */
 void LPM_EnterStopMode( void)
 {
-  BACKUP_PRIMASK();
-
-  DISABLE_IRQ( );
+	ENTER_CRITICAL_SECTION();
 
   HW_IoDeInit( );
-  
+
   HW_AdcDeInit();
 
   /*clear wake up flag*/
   SET_BIT(PWR->CR, PWR_CR_CWUF);
-  
-  RESTORE_PRIMASK( );
+
+  EXIT_CRITICAL_SECTION();
 
   /* Enter Stop Mode */
   HAL_PWR_EnterSTOPMode ( PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI );
@@ -486,32 +486,29 @@ void LPM_ExitStopMode( void)
 {
   /* Disable IRQ while the MCU is not running on HSI */
 
-  BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
-
+	ENTER_CRITICAL_SECTION();
   /* After wake-up from STOP reconfigure the system clock */
   /* Enable HSI */
   __HAL_RCC_HSI_ENABLE();
 
   /* Wait till HSI is ready */
   while( __HAL_RCC_GET_FLAG(RCC_FLAG_HSIRDY) == RESET ) {}
-  
+
   /* Enable PLL */
   __HAL_RCC_PLL_ENABLE();
   /* Wait till PLL is ready */
   while( __HAL_RCC_GET_FLAG( RCC_FLAG_PLLRDY ) == RESET ) {}
-  
+
   /* Select PLL as system clock source */
   __HAL_RCC_SYSCLK_CONFIG ( RCC_SYSCLKSOURCE_PLLCLK );
-  
-  /* Wait till PLL is used as system clock source */ 
+
+  /* Wait till PLL is used as system clock source */
   while( __HAL_RCC_GET_SYSCLK_SOURCE( ) != RCC_SYSCLKSOURCE_STATUS_PLLCLK ) {}
-    
+
   /*initilizes the peripherals*/
   HW_IoInit( );
 
-  RESTORE_PRIMASK( );
+  EXIT_CRITICAL_SECTION();
 }
 
 /**

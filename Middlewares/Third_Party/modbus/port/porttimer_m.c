@@ -21,7 +21,7 @@
  */
 
 /* ----------------------- Platform includes --------------------------------*/
-#include "port.h"
+#include <port.h>
 #include "FreeRTOS.h"
 #ifdef SW_TIMER
 #include "timers.h"

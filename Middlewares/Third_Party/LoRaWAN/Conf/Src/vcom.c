@@ -19,7 +19,7 @@
 
 #include "hw.h"
 #include "vcom.h"
-
+#include "usbd_cdc_if.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -27,14 +27,14 @@
 /* Uart Handle */
 //static UART_HandleTypeDef UartHandle;
 //
-//static void (*TxCpltCallback) (void);
+static void (*TxCpltCallback) (void);
 /* Private function prototypes -----------------------------------------------*/
 /* Functions Definition ------------------------------------------------------*/
 void vcom_Init(  void (*TxCb)(void) )
 {
 
 //  /*Record Tx complete for DMA*/
-//  TxCpltCallback=TxCb;
+  TxCpltCallback=TxCb;
 //  /*## Configure the UART peripheral ######################################*/
 //  /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
 //  /* UART1 configured as follow:
@@ -62,7 +62,12 @@ void vcom_Init(  void (*TxCb)(void) )
 void vcom_Trace(  uint8_t *p_data, uint16_t size )
 {
 //  HAL_UART_Transmit_DMA(&UartHandle,p_data, size);
-  CDC_Transmit_FS((uint8_t *) p_data, size);
+//  CDC_Transmit_FS((uint8_t *) p_data, size);
+#ifdef __CROSS_STUDIO__
+  debug_printf((uint8_t *) p_data, size);
+#else
+  printf((uint8_t *) p_data, size);
+#endif
 }
 
 //void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)

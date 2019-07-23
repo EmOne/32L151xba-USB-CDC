@@ -21,7 +21,7 @@
  */
 
 /* ----------------------- Platform includes --------------------------------*/
-#include "port.h"
+#include <port.h>
 #include "cmsis_os.h"
 #include "FreeRTOS.h"
 #include "event_groups.h"

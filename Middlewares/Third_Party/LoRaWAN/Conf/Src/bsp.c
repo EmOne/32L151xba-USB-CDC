@@ -23,6 +23,7 @@
 #include "hw.h"
 #include "timeServer.h"
 #include "bsp.h"
+#include "user_mb_app.h"
 #if defined(LRWAN_NS1)
 #include "lrwan_ns1_humidity.h"
 #include "lrwan_ns1_pressure.h"
@@ -41,8 +42,6 @@
 #endif  /* X_NUCLEO_IKS01A1 */
 #endif  /* SENSOR_ENABLED */
 #endif  /* LRWAN_NS1 */
-
-
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -74,7 +73,7 @@ void BSP_sensor_Read( sensor_t *sensor_data)
   BSP_PRESSURE_Get_Press(PRESSURE_handle, &PRESSURE_Value);
 #endif  
   sensor_data->humidity    = HUMIDITY_Value;
-  sensor_data->temperature = TEMPERATURE_Value;
+  sensor_data->temperature = usMRegInBuf[0][0]; //TEMPERATURE_Value;
   sensor_data->pressure    = PRESSURE_Value;
   
   sensor_data->latitude  = (int32_t) ((STSOP_LATTITUDE  * MAX_GPS_POS) /90);

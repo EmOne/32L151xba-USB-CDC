@@ -46,12 +46,15 @@
 #include "sx1272mb2das.h"
 
 
-#define IRQ_HIGH_PRIORITY  0
+#define IRQ_HIGH_PRIORITY  5
 
 /*!
  * Flag used to set the RF switch control pins in low power mode when the radio is not active.
  */
-
+/*!
+ * Flag used to set the RF switch control pins in low power mode when the radio is not active.
+ */
+static bool RadioIsActive = false;
 
 void SX1272SetXO( uint8_t state );
 
@@ -65,14 +68,27 @@ void SX1272SetAntSwLowPower( bool status );
 
 void SX1272SetRfTxPower( int8_t power );
 
-void SX1272SetAntSw( uint8_t opMode );
 /*!
- * \brief Controls the antena switch if necessary.
+ * \brief Controls the antenna switch if necessary.
  *
  * \remark see errata note
  *
  * \param [IN] opMode Current radio operating mode
  */
+void SX1272SetAntSw( uint8_t opMode );
+
+/*!
+ * \brief Initializes the RF Switch I/Os pins interface
+ */
+void SX1272AntSwInit( void );
+
+/*!
+ * \brief De-initializes the RF Switch I/Os pins interface
+ *
+ * \remark Needed to decrease the power consumption in MCU low power modes
+ */
+void SX1272AntSwDeInit( void );
+
 static LoRaBoardCallback_t BoardCallbacks = { SX1272SetXO,
                                               SX1272GetWakeTime,
                                               SX1272IoIrqInit,
@@ -227,6 +243,49 @@ uint8_t SX1272GetPaSelect( uint32_t channel )
 void SX1272SetAntSwLowPower( bool status )
 {
   //Ant Switch Controlled by SX1272 IC
+	if (RadioIsActive != status) {
+		RadioIsActive = status;
+
+		if (status == false) {
+			SX1272AntSwInit();
+		} else {
+			SX1272AntSwDeInit();
+		}
+	}
+}
+
+void SX1272AntSwInit( void )
+{
+	GPIO_InitTypeDef initStruct = { 0 };
+
+	initStruct.Pull = GPIO_PULLUP;
+	initStruct.Speed = GPIO_SPEED_HIGH;
+	initStruct.Mode = GPIO_MODE_OUTPUT_PP;
+
+	HW_GPIO_Init( RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin,
+			&initStruct);
+	HW_GPIO_Init( RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin,
+			&initStruct);
+	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_RESET);
+	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
+//    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
+//    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
+}
+
+void SX1272AntSwDeInit( void )
+{
+	GPIO_InitTypeDef initStruct = { 0 };
+
+	initStruct.Mode = GPIO_MODE_ANALOG;
+	initStruct.Pull = GPIO_NOPULL;
+
+	HW_GPIO_Init( RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin,
+			&initStruct);
+	HW_GPIO_Init( RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin,
+			&initStruct);
+
+//    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+//    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
 }
 
 void SX1272SetAntSw( uint8_t opMode )
@@ -234,12 +293,16 @@ void SX1272SetAntSw( uint8_t opMode )
     switch( opMode )
     {
     case RFLR_OPMODE_TRANSMITTER:
-        SX1272.RxTx = 1;
+    	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_SET);
+    	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_RESET);
+    	SX1272.RxTx = 1;
         break;
     case RFLR_OPMODE_RECEIVER:
     case RFLR_OPMODE_RECEIVER_SINGLE:
     case RFLR_OPMODE_CAD:
     default:
+    	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_RESET);
+    	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
         SX1272.RxTx = 0;
         break;
     }

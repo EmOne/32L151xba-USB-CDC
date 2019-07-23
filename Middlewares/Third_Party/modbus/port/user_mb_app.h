@@ -44,5 +44,5 @@
 #define          M_CO_RESERVE                     0
 /* master mode: discrete's all address */
 #define          M_DI_RESERVE                     0
-
+extern USHORT   usMRegInBuf[][M_REG_INPUT_NREGS];
 #endif

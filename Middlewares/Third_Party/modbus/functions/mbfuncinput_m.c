@@ -29,13 +29,11 @@
  */
 
 /* ----------------------- System includes ----------------------------------*/
+#include <port.h>
 #include "stdlib.h"
 #include "string.h"
 
 /* ----------------------- Platform includes --------------------------------*/
-#include "port.h"
-
-/* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mb_m.h"
 #include "mbframe.h"
@@ -81,10 +79,6 @@ eMBMasterReqReadInputRegister( UCHAR ucSndAddr, USHORT usRegAddr, USHORT usNRegs
     	eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
-//    	xMBMasterPortEventGet(&eEvent);
-//    	if((eEvent & EV_MASTER_READY) == 0) {
-//    		return MB_MRE_MASTER_BUSY;
-//    	}
 		vMBMasterGetPDUSndBuf(&ucMBFrame);
 		vMBMasterSetDestAddress(ucSndAddr);
 		ucMBFrame[MB_PDU_FUNC_OFF]                = MB_FUNC_READ_INPUT_REGISTER;

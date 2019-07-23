@@ -51,7 +51,8 @@ extern "C" {
 #include "util_console.h"
 #include "debug.h"
 #include "main.h"
-
+#include <port.h>
+#include "cmsis_os.h"
 #ifdef __cplusplus
 }
 #endif

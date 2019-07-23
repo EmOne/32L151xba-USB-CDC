@@ -41,7 +41,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include "utilities.h" 
-
+#include <port.h>
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -157,6 +157,14 @@ TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime );
  * \retval Compensated time period
  */
 TimerTime_t TimerTempCompensation( TimerTime_t period, float temperature );
+
+void            vTimerServerOsResInit( void );
+
+BOOL xTimeServerRunResTake( LONG lTimeOut );
+
+void 			xTimeServerRunResGiveFromISR ( void );
+
+void            vTimeServerRunResRelease( void );
 
 #ifdef __cplusplus
 }

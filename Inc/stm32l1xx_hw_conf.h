@@ -132,10 +132,14 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define RADIO_DIO_5_PIN                           RADIO_DIO_5_Pin
 #endif
 
-#define RADIO_ANT_SWITCH_PORT                     GPIOC
-#define RADIO_ANT_SWITCH_PIN                      GPIO_PIN_1
+//#define RADIO_ANT_SWITCH_PORT                     RADIO_ANT_SWITCH_RX_GPIO_Port
+//#define RADIO_ANT_SWITCH_PIN                      RADIO_ANT_SWITCH_RX_Pin
 
+#define RADIO_ANT_SWITCH_RX_Pin 				GPIO_PIN_13
+#define RADIO_ANT_SWITCH_RX_GPIO_Port 			GPIOC
 
+#define RADIO_ANT_SWITCH_TX_Pin 				GPIO_PIN_4
+#define RADIO_ANT_SWITCH_TX_GPIO_Port 			GPIOA
 
 #else
 
