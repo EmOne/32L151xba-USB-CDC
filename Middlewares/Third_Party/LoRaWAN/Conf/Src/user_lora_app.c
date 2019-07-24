@@ -50,7 +50,7 @@
 #define LORAWAN_ADR_STATE LORAWAN_ADR_ON
 /*!
  * LoRaWAN Default data Rate Data Rate
- * @note Please note that LORAWAN_DEFAULT_DATA_RATE is used only when ADR is disabled 
+ * @note Please note that LORAWAN_DEFAULT_DATA_RATE is used only when ADR is disabled
  */
 #define LORAWAN_DEFAULT_DATA_RATE DR_0
 /*!
@@ -61,7 +61,7 @@
 /*!
  * LoRaWAN default endNode class port
  */
-#define LORAWAN_DEFAULT_CLASS                       CLASS_C
+#define LORAWAN_DEFAULT_CLASS                       CLASS_A
 /*!
  * LoRaWAN default confirm state
  */
@@ -125,7 +125,7 @@ LoraFlagStatus AppProcessRequest=LORA_RESET;
  * Specifies the state of the application LED
  */
 static uint8_t AppLedStateOn = RESET;
-                                               
+
 static TimerEvent_t TxTimer;
 
 #ifdef USE_B_L072Z_LRWAN1
@@ -139,7 +139,7 @@ static void OnTimerLedEvent( void* context );
  *Initialises the Lora Parameters
  */
 static  LoRaParam_t LoRaParamInit= {LORAWAN_ADR_STATE,
-                                    LORAWAN_DEFAULT_DATA_RATE,  
+                                    LORAWAN_DEFAULT_DATA_RATE,
                                     LORAWAN_PUBLIC_NETWORK};
 
 /* Private functions ---------------------------------------------------------*/
@@ -153,31 +153,31 @@ void thread_entry_LoRaPoll(void const * argument)
 {
   /* STM32 HAL library initialization*/
 //  HAL_Init();
-  
+
   /* Configure the system clock*/
 //  SystemClock_Config();
-  
+
   /* Configure the debug mode*/
   DBG_Init();
-  
+
   /* Configure the hardware*/
   HW_Init();
-  
+
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */
-  
+
   /*Disbale Stand-by mode*/
   LPM_SetOffMode(LPM_APPLI_Id , LPM_Disable );
-  
+
   PRINTF("VERSION: %X\n\r", VERSION);
-  
+
   /* Configure the Lora Stack*/
   LORA_Init( &LoRaMainCallbacks, &LoRaParamInit);
-  
+
   LORA_Join();
-  
+
   LoraStartTx( TX_ON_TIMER) ;
-  
+
   for(;;)
   {
 	vTaskDelay(1);
@@ -245,28 +245,28 @@ static void Send( void* context )
   uint16_t humidity = 0;
   uint8_t batteryLevel;
   sensor_t sensor_data;
-  
+
   if ( LORA_JoinStatus () != LORA_SET)
   {
     /*Not joined, try again later*/
     LORA_Join();
     return;
   }
-  
+
   TVL1(PRINTF("SEND REQUEST\n\r"););
 #ifndef CAYENNE_LPP
   int32_t latitude, longitude = 0;
   uint16_t altitudeGps = 0;
 #endif
-  
+
 #ifdef USE_B_L072Z_LRWAN1
   TimerInit( &TxLedTimer, OnTimerLedEvent );
-  
+
   TimerSetValue(  &TxLedTimer, 200);
-  
-  LED_On( LED_RED1 ) ; 
-  
-  TimerStart( &TxLedTimer );  
+
+  LED_On( LED_RED1 ) ;
+
+  TimerStart( &TxLedTimer );
 #endif
 
   BSP_sensor_Read( &sensor_data );
@@ -287,7 +287,7 @@ static void Send( void* context )
   AppData.Buff[i++] = ( pressure >> 8 ) & 0xFF;
   AppData.Buff[i++] = pressure & 0xFF;
   AppData.Buff[i++] = cchannel++;
-  AppData.Buff[i++] = LPP_DATATYPE_TEMPERATURE; 
+  AppData.Buff[i++] = LPP_DATATYPE_TEMPERATURE;
   AppData.Buff[i++] = ( temperature >> 8 ) & 0xFF;
   AppData.Buff[i++] = temperature & 0xFF;
   AppData.Buff[i++] = cchannel++;
@@ -297,10 +297,10 @@ static void Send( void* context )
   /* The maximum payload size does not allow to send more data for lowest DRs */
 #else
   AppData.Buff[i++] = cchannel++;
-  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_INPUT; 
+  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_INPUT;
   AppData.Buff[i++] = batteryLevel*100/254;
   AppData.Buff[i++] = cchannel++;
-  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_OUTPUT; 
+  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_OUTPUT;
   AppData.Buff[i++] = AppLedStateOn;
 #endif  /* REGION_XX915 */
 #else  /* not CAYENNE_LPP */
@@ -348,9 +348,9 @@ static void Send( void* context )
 #endif  /* REGION_XX915 */
 #endif  /* CAYENNE_LPP */
   AppData.BuffSize = i;
-  
+
   LORA_send( &AppData, LORAWAN_DEFAULT_CONFIRM_MSG_STATE);
-  
+
   /* USER CODE END 3 */
 }
 
@@ -411,7 +411,7 @@ static void LORA_RxData( lora_AppData_t *AppData )
     {
       PRINTF("LED OFF\n\r");
 //      LED_Off( LED_BLUE ) ;
-      
+
     }
     else
     {
@@ -430,7 +430,7 @@ static void OnTxTimerEvent( void* context )
 {
   /*Wait for next tx slot*/
   TimerStart( &TxTimer);
-  
+
   AppProcessRequest=LORA_SET;
 }
 
@@ -440,7 +440,7 @@ static void LoraStartTx(TxEventType_t EventType)
   {
     /* send everytime timer elapses */
     TimerInit( &TxTimer, OnTxTimerEvent );
-    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE); 
+    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE);
     OnTxTimerEvent( NULL );
   }
   else
@@ -465,7 +465,7 @@ static void LORA_ConfirmClass ( DeviceClass_t Class )
   /*informs the server that switch has occurred ASAP*/
   AppData.BuffSize = 0;
   AppData.Port = LORAWAN_APP_PORT;
-  
+
   LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
 }
 
@@ -473,14 +473,14 @@ static void LORA_TxNeeded ( void )
 {
   AppData.BuffSize = 0;
   AppData.Port = LORAWAN_APP_PORT;
-  
+
   LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
 }
 
 #ifdef USE_B_L072Z_LRWAN1
 static void OnTimerLedEvent( void* context )
 {
-  LED_Off( LED_RED1 ) ; 
+  LED_Off( LED_RED1 ) ;
 }
 #endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -37,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -128,7 +128,7 @@ void HardFault_Handler(void)
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern PCD_HandleTypeDef hpcd_USB_FS;
+//extern PCD_HandleTypeDef hpcd_USB_FS;
 extern TIM_HandleTypeDef htim7;
 extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim6;
@@ -138,7 +138,7 @@ extern TIM_HandleTypeDef htim6;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M3 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -241,7 +241,7 @@ void USB_LP_IRQHandler(void)
   /* USER CODE BEGIN USB_LP_IRQn 0 */
 
   /* USER CODE END USB_LP_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+//  HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 
   /* USER CODE END USB_LP_IRQn 1 */

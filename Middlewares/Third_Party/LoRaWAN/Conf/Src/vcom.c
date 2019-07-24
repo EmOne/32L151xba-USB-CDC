@@ -68,6 +68,7 @@ void vcom_Trace(  uint8_t *p_data, uint16_t size )
 #else
   printf((uint8_t *) p_data, size);
 #endif
+  TxCpltCallback();
 }
 
 //void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
