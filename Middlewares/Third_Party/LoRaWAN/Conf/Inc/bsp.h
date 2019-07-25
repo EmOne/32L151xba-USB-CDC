@@ -43,12 +43,13 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 typedef struct{
   float pressure;    /* in mbar */  
-  float temperature; /* in °C   */
+  float temperature; /* in ï¿½C   */
   float humidity;    /* in %    */
   int32_t latitude;
   int32_t longitude ;
   int16_t  altitudeGps;       /* in m */
   int16_t altitudeBar ;       /* in m * 10 */
+  uint16_t mbStatus;
   /**more may be added*/
 } sensor_t;
 

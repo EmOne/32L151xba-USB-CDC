@@ -380,6 +380,8 @@ eMBMasterPoll( void )
         	break;
             
         default:
+        	xMBMasterPortEventPost(EV_MASTER_READY);
+        	vMBMasterRunResRelease();
             break;
         }
     }

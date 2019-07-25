@@ -37,7 +37,7 @@
 /* ----------------------- Variables ----------------------------------------*/
 static SemaphoreHandle_t xMasterRunRes;
 static EventGroupHandle_t xMasterOsEvent;
-static eMBMasterEventType eQueuedMasterEvent;
+eMBMasterEventType eQueuedMasterEvent;
 static BOOL     xEventMasterInQueue;
 /* ----------------------- Start implementation -----------------------------*/
 BOOL

@@ -5,7 +5,7 @@
 #include "mbport.h"
 #include "user_mb_app.h"
 #include "cpu_utils.h"
-#include "usbd_cdc_if.h"
+//#include "usbd_cdc_if.h"
 
 //USHORT usModbusUserData[MB_PDU_SIZE_MAX];
 //UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
@@ -61,8 +61,8 @@ void thread_entry_Simulation(void const * argument) {
 	USHORT usNRegs = 6;
 	TickType_t tInterval = pdMS_TO_TICKS(1000);
 
-	traceTASK_SWITCHED_IN()
-	;
+//	traceTASK_SWITCHED_IN()
+//	;
 
 	for (;;) {
 		vTaskDelay(tInterval);

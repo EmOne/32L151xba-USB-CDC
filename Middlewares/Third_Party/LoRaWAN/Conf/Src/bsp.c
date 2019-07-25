@@ -78,6 +78,7 @@ void BSP_sensor_Read( sensor_t *sensor_data)
   
   sensor_data->latitude  = (int32_t) ((STSOP_LATTITUDE  * MAX_GPS_POS) /90);
   sensor_data->longitude = (int32_t) ((STSOP_LONGITUDE  * MAX_GPS_POS )/180);
+  sensor_data->mbStatus = (uint32_t) eQueuedMasterEvent;
   /* USER CODE END 5 */
 }
 

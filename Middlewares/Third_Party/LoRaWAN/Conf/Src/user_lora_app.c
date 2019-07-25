@@ -180,8 +180,9 @@ void thread_entry_LoRaPoll(void const * argument)
 
   for(;;)
   {
-	vTaskDelay(1);
+	  vTaskDelay(1);
 //	if(xTimeServerRunResTake(portMAX_DELAY) == pdPASS)
+//	if ( xMBMasterRunResTake( portMAX_DELAY ) == pdPASS )
 	{
 
 		if (AppProcessRequest==LORA_SET)
@@ -201,7 +202,7 @@ void thread_entry_LoRaPoll(void const * argument)
 		}
 		/*If a flag is set at this point, mcu must not enter low power and must loop*/
 //	    DISABLE_IRQ( );
-	    CRITICAL_SECTION_BEGIN( );
+//	    CRITICAL_SECTION_BEGIN( );
 //
 //	    /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending
 //	     * and cortex will not enter low power anyway  */
@@ -210,11 +211,12 @@ void thread_entry_LoRaPoll(void const * argument)
 //	#ifndef LOW_POWER_DISABLE
 //	      LPM_EnterLowPower( );
 //	#endif
-	    	vTimeServerRunResRelease();
+//	    	vTimeServerRunResRelease();
+//	    	vMBMasterRunResRelease( );
 	    }
 //
 //	    ENABLE_IRQ();
-	    CRITICAL_SECTION_END( );
+//	    CRITICAL_SECTION_END( );
 
 	}
     /* USER CODE BEGIN 2 */
@@ -327,7 +329,7 @@ static void Send( void* context )
   AppData.Buff[i++] = batteryLevel;
   AppData.Buff[i++] = 0;
   AppData.Buff[i++] = 0;
-  AppData.Buff[i++] = 0;
+  AppData.Buff[i++] = sensor_data.mbStatus;
 #else  /* not REGION_XX915 */
   AppData.Buff[i++] = AppLedStateOn;
   AppData.Buff[i++] = ( pressure >> 8 ) & 0xFF;
