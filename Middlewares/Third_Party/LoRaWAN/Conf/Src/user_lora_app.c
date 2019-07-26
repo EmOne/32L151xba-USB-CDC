@@ -42,7 +42,7 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            10000
+#define APP_TX_DUTYCYCLE                            15000
 /*!
  * LoRaWAN Adaptive Data Rate
  * @note Please note that when ADR is enabled the end-device should be static
@@ -151,6 +151,8 @@ static  LoRaParam_t LoRaParamInit= {LORAWAN_ADR_STATE,
   */
 void thread_entry_LoRaPoll(void const * argument)
 {
+//	traceTASK_SWITCHED_IN()
+//	;
   /* STM32 HAL library initialization*/
 //  HAL_Init();
 
@@ -202,7 +204,7 @@ void thread_entry_LoRaPoll(void const * argument)
 		}
 		/*If a flag is set at this point, mcu must not enter low power and must loop*/
 //	    DISABLE_IRQ( );
-//	    CRITICAL_SECTION_BEGIN( );
+	    CRITICAL_SECTION_BEGIN( );
 //
 //	    /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending
 //	     * and cortex will not enter low power anyway  */
@@ -216,7 +218,7 @@ void thread_entry_LoRaPoll(void const * argument)
 	    }
 //
 //	    ENABLE_IRQ();
-//	    CRITICAL_SECTION_END( );
+	    CRITICAL_SECTION_END( );
 
 	}
     /* USER CODE BEGIN 2 */

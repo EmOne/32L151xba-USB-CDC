@@ -5,6 +5,7 @@
 #include "mbport.h"
 #include "user_mb_app.h"
 #include "cpu_utils.h"
+//#include "util_console.h"
 //#include "usbd_cdc_if.h"
 
 //USHORT usModbusUserData[MB_PDU_SIZE_MAX];
@@ -40,6 +41,9 @@ void thread_entry_ModbusSlavePoll(void const * argument)
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 void thread_entry_ModbusMasterPoll(void const * argument) {
+//	traceTASK_SWITCHED_IN()
+//	;
+
 	eMBErrorCode eStatus = eMBMasterInit(MB_RTU, 1, 4800, MB_PAR_NONE);
 
 	if (eStatus == MB_ENOERR) {
@@ -95,10 +99,12 @@ void thread_entry_Simulation(void const * argument) {
 
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;
-		} else {
-//			CDC_Transmit_FS((uint8_t *) &usMRegInBuf[ucSndAddr - 1][0], usNRegs);
-			printf("Temp=%d\r\n", usMRegInBuf[ucSndAddr - 1][0]);
-		}
+		} 
+//                else 
+//                {
+////			CDC_Transmit_FS((uint8_t *) &usMRegInBuf[ucSndAddr - 1][0], usNRegs);
+//			PRINTF("Temp=%d\r\n", usMRegInBuf[ucSndAddr - 1][0]);
+//		}
 	}
 }
 #endif
