@@ -86,7 +86,7 @@ static void MX_TIM7_Init(void);
 //static void MX_RTC_Init(void);
 //static void MX_SPI1_Init(void);
 //static void MX_ADC_Init(void);
-//void StartDefaultTask(void const * argument);
+void StartDefaultTask(void const * argument);
 
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
@@ -162,19 +162,19 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-//  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
-//  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 	osThreadDef(simulateTask, thread_entry_Simulation, osPriorityNormal, 0,
-			configMINIMAL_STACK_SIZE);
+			configMINIMAL_STACK_SIZE * 4);
 	simulateTaskHandle = osThreadCreate(osThread(simulateTask), NULL);
 
 	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0,
-			configMINIMAL_STACK_SIZE);
+			configMINIMAL_STACK_SIZE  * 4);
 	modbusMasterTaskHandle = osThreadCreate(osThread(mModbusTask), NULL);
 #else
 	  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
@@ -182,7 +182,7 @@ int main(void)
 #endif
 #ifdef USE_LORA_HAL_DRIVER
 	  osThreadDef(mLoRaTask, thread_entry_LoRaPoll, osPriorityNormal, 0,
-	  			configMINIMAL_STACK_SIZE);
+	  			configMINIMAL_STACK_SIZE  * 6);
 	  mLoraTaskHandle = osThreadCreate(osThread(mLoRaTask), NULL);
 #endif
   /* USER CODE END RTOS_THREADS */
@@ -578,20 +578,20 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-//void StartDefaultTask(void const * argument)
-//{
-//  /* init code for USB_DEVICE */
-////  MX_USB_DEVICE_Init();
-//
-//  /* USER CODE BEGIN 5 */
-//
-//  /* Infinite loop */
-//  for(;;)
-//  {
-//	  vTaskDelay(1);
-//  }
-//  /* USER CODE END 5 */
-//}
+void StartDefaultTask(void const * argument)
+{
+  /* init code for USB_DEVICE */
+//  MX_USB_DEVICE_Init();
+
+  /* USER CODE BEGIN 5 */
+
+  /* Infinite loop */
+  for(;;)
+  {
+	  osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

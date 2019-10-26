@@ -48,12 +48,12 @@
  * LoRaWAN Adaptive Data Rate
  * @note Please note that when ADR is enabled the end-device should be static
  */
-#define LORAWAN_ADR_STATE LORAWAN_ADR_ON
+#define LORAWAN_ADR_STATE LORAWAN_ADR_OFF
 /*!
  * LoRaWAN Default data Rate Data Rate
  * @note Please note that LORAWAN_DEFAULT_DATA_RATE is used only when ADR is disabled
  */
-#define LORAWAN_DEFAULT_DATA_RATE DR_5
+#define LORAWAN_DEFAULT_DATA_RATE 	DR_5
 /*!
  * LoRaWAN application port
  * @note do not use 224. It is reserved for certification
@@ -161,7 +161,7 @@ void thread_entry_LoRaPoll(void const * argument)
 //  SystemClock_Config();
 
   /* Configure the debug mode*/
-  DBG_Init();
+//  DBG_Init();
 
   /* Configure the hardware*/
   HW_Init();
