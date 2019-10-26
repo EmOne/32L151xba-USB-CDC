@@ -61,6 +61,7 @@ extern setting_t user_setting;
 #define USER_SETTING_EEPROM_BASE 0x100
 
 uint8_t eMBMasterValidUserSetting(uint16_t reg, const uint8_t * setting_data);
-void eMBMasterWriteUserSetting(const uint8_t * setting_data);
+void eMBMasterWriteUserSetting(uint8_t * setting_data);
+void eMBMasterNormalizeUserSetting(setting_t * setting_data);
             
 #endif

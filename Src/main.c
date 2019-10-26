@@ -61,6 +61,10 @@ UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
+#ifdef USE_LORA_HAL_DRIVER
+osThreadId mLoraTaskHandle;
+extern void thread_entry_LoRaPoll(void const * argument);
+#endif
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 osThreadId simulateTaskHandle;
 osThreadId modbusMasterTaskHandle;
@@ -71,9 +75,7 @@ osThreadId modbusSlaveTaskHandle;
 #endif
 uint16_t CpuUsageMajor;
 uint16_t CpuUsageMinor;
-#ifdef USE_LORA_HAL_DRIVER
-osThreadId mLoraTaskHandle;
-#endif
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,9 +98,7 @@ extern void prvvMastesTIMERExpiredISR(void);
 extern void thread_entry_ModbusSlavePoll(void const * argument);
 extern void prvvTIMERExpiredISR(void);
 #endif
-#ifdef USE_LORA_HAL_DRIVER
-extern void thread_entry_LoRaPoll(void const * argument);
-#endif
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -170,7 +170,7 @@ int main(void)
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 	osThreadDef(simulateTask, thread_entry_Simulation, osPriorityNormal, 0,
-			configMINIMAL_STACK_SIZE  * 2);
+			configMINIMAL_STACK_SIZE);
 	simulateTaskHandle = osThreadCreate(osThread(simulateTask), NULL);
 
 	osThreadDef(mModbusTask, thread_entry_ModbusMasterPoll, osPriorityNormal, 0,
@@ -180,9 +180,8 @@ int main(void)
 	  osThreadDef(sModbusTask, thread_entry_ModbusSlavePoll, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
 	  modbusSlaveTaskHandle = osThreadCreate(osThread(sModbusTask),  NULL);
 #endif
-
 #ifdef USE_LORA_HAL_DRIVER
-	  osThreadDef(mLoRaTask, thread_entry_LoRaPoll, osPriorityAboveNormal, 0,
+	  osThreadDef(mLoRaTask, thread_entry_LoRaPoll, osPriorityNormal, 0,
 	  			configMINIMAL_STACK_SIZE);
 	  mLoraTaskHandle = osThreadCreate(osThread(mLoRaTask), NULL);
 #endif

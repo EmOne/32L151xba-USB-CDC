@@ -152,6 +152,10 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress,
             if(eMBMasterValidUserSetting(ucMBMasterGetDestAddress(),(uint8_t *) pusRegHoldingBuf) == FALSE) {
               
               memcpy((uint8_t *) &user_setting, (uint8_t *) pusRegHoldingBuf, sizeof(setting_t));
+
+              //Normalized
+              eMBMasterNormalizeUserSetting(&user_setting);
+
               //TODO: Write new User settings
               eMBMasterWriteUserSetting((uint8_t *) &user_setting);
             }
@@ -314,9 +318,25 @@ uint8_t eMBMasterValidUserSetting(uint16_t reg,const uint8_t * setting_data)
   return 0;
 }
 
-void eMBMasterWriteUserSetting(const uint8_t * setting_data)
+void eMBMasterWriteUserSetting(uint8_t * setting_data)
 {
   EepromMcuWriteBuffer(USER_SETTING_EEPROM_BASE, setting_data, sizeof (setting_t) );
 }
+
+void eMBMasterNormalizeUserSetting(setting_t * setting_data)
+{
+  if(setting_data->slave_id < 1 || setting_data->slave_id > MB_MASTER_TOTAL_SLAVE_NUM)
+    setting_data->slave_id = 1;
+  if(setting_data->reg_addr < 0)
+    setting_data->reg_addr = 0;
+  if(setting_data->qty < 1 || setting_data->qty > M_REG_INPUT_NREGS)
+    setting_data->qty = 1;
+  if(setting_data->interval < 1000 || setting_data->interval > 60000 )
+    setting_data->interval = 1000;
+  if(setting_data->baudrate < 0 || setting_data->baudrate > 5 ){
+    setting_data->baudrate = 1;
+  }
+}
+
 
 #endif

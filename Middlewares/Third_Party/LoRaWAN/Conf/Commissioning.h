@@ -100,7 +100,8 @@
  * IEEE Organizationally Unique Identifier ( OUI ) (big endian)
  * \remark This is unique to a company or organization
  */
-#define IEEE_OUI                                           0x01, 0x01, 0x01   
+#define IEEE_OUI                                           0x70, 0xB3, 0xD5   
+//#define IEEE_OUI                                           0x01, 0x01, 0x01   
 
 /*!
  * Mote device IEEE EUI (big endian)

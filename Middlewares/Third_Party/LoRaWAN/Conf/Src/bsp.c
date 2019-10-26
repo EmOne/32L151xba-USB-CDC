@@ -71,7 +71,7 @@ void BSP_sensor_Read( sensor_t *sensor_data)
   BSP_HUMIDITY_Get_Hum(HUMIDITY_handle, &HUMIDITY_Value);
   BSP_TEMPERATURE_Get_Temp(TEMPERATURE_handle, &TEMPERATURE_Value);
   BSP_PRESSURE_Get_Press(PRESSURE_handle, &PRESSURE_Value);
-#endif  
+#else
   sensor_data->humidity    = HUMIDITY_Value;
   sensor_data->temperature = usMRegInBuf[0][0]; //TEMPERATURE_Value;
   sensor_data->pressure    = PRESSURE_Value;
@@ -79,6 +79,8 @@ void BSP_sensor_Read( sensor_t *sensor_data)
   sensor_data->latitude  = (int32_t) ((STSOP_LATTITUDE  * MAX_GPS_POS) /90);
   sensor_data->longitude = (int32_t) ((STSOP_LONGITUDE  * MAX_GPS_POS )/180);
   sensor_data->mbStatus = (uint32_t) eQueuedMasterEvent;
+
+#endif  
   /* USER CODE END 5 */
 }
 

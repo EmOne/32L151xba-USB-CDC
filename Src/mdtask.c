@@ -7,10 +7,10 @@
 #include "cpu_utils.h"
 //#include "util_console.h"
 //#include "usbd_cdc_if.h"
-
+#include "lora.h"
 //USHORT usModbusUserData[MB_PDU_SIZE_MAX];
 //UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
-
+extern LoraFlagStatus AppProcessRequest;
 extern eMBMasterEventType eQueuedMasterEvent;
 
 __ALIGNED(portBYTE_ALIGNMENT)
@@ -49,14 +49,8 @@ void thread_entry_ModbusMasterPoll(void const * argument) {
         //TODO: Read EEPROM for User settings
         EepromMcuReadBuffer(USER_SETTING_EEPROM_BASE, (uint8_t *) &user_setting, sizeof (setting_t) );
 
-        if(user_setting.slave_id < 1 || user_setting.slave_id > MB_MASTER_TOTAL_SLAVE_NUM)
-          user_setting.slave_id = 1;
-        if(user_setting.reg_addr < 0)
-          user_setting.reg_addr = 0;
-        if(user_setting.qty < 1 || user_setting.qty > M_REG_INPUT_NREGS)
-          user_setting.qty = 1;
-        if(user_setting.interval < 1000 || user_setting.interval > 60000 )
-          user_setting.interval = 1000;
+        eMBMasterNormalizeUserSetting(&user_setting);
+
         switch(user_setting.baudrate){
           case 0:
             baud = 2400;
@@ -129,16 +123,18 @@ void thread_entry_Simulation(void const * argument) {
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
 //		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
 //                while (eQueuedMasterEvent != EV_MASTER_READY)
-                  errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id, user_setting.reg_addr, user_setting.qty, 1000);
+                errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id, user_setting.reg_addr, user_setting.qty, tInterval);
+                if(errorCode == MB_MRE_NO_ERR && AppProcessRequest == LORA_RESET)
+                  AppProcessRequest = LORA_SET;
 //		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
 //		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
 //		while (eQueuedMasterEvent != EV_MASTER_READY)
-                  errorCode = eMBMasterReqReadHoldingRegister(7,0,5, 1000);
+                errorCode = eMBMasterReqReadHoldingRegister(7,0,5, tInterval);
 //		errorCode = eMBMasterReqReadWriteMultipleHoldingRegister(1,3,2,usModbusUserData,5,2,-1);
 
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;
-                        errorCode = MB_MRE_NO_ERR;
+//                        errorCode = MB_MRE_NO_ERR;
 		} 
 //                else 
 //                {

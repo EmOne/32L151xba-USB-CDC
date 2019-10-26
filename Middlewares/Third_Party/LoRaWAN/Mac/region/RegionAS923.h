@@ -77,7 +77,7 @@
 /*!
  * Default datarate used by the node
  */
-#define AS923_DEFAULT_DATARATE                      DR_2
+#define AS923_DEFAULT_DATARATE                      DR_5
 
 /*!
  * The minimum datarate which is used when the
