@@ -11,6 +11,8 @@
 //USHORT usModbusUserData[MB_PDU_SIZE_MAX];
 //UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
 
+extern eMBMasterEventType eQueuedMasterEvent;
+
 __ALIGNED(portBYTE_ALIGNMENT)
 #if MB_SLAVE_RTU_ENABLED > 0 || MB_SLAVE_ASCII_ENABLED > 0
 extern USHORT usSRegInBuf[];
@@ -43,15 +45,50 @@ void thread_entry_ModbusSlavePoll(void const * argument)
 void thread_entry_ModbusMasterPoll(void const * argument) {
 //	traceTASK_SWITCHED_IN()
 //	;
+        static uint32_t baud = 4800;
+        //TODO: Read EEPROM for User settings
+        EepromMcuReadBuffer(USER_SETTING_EEPROM_BASE, (uint8_t *) &user_setting, sizeof (setting_t) );
 
-	eMBErrorCode eStatus = eMBMasterInit(MB_RTU, 1, 4800, MB_PAR_NONE);
+        if(user_setting.slave_id < 1 || user_setting.slave_id > MB_MASTER_TOTAL_SLAVE_NUM)
+          user_setting.slave_id = 1;
+        if(user_setting.reg_addr < 0)
+          user_setting.reg_addr = 0;
+        if(user_setting.qty < 1 || user_setting.qty > M_REG_INPUT_NREGS)
+          user_setting.qty = 1;
+        if(user_setting.interval < 1000 || user_setting.interval > 60000 )
+          user_setting.interval = 1000;
+        switch(user_setting.baudrate){
+          case 0:
+            baud = 2400;
+            break;
+          case 1:
+            baud = 4800;
+            break;
+          case 2:
+            baud = 9600;
+            break;
+          case 3:
+            baud = 19200;
+          break;
+          case 4:
+            baud = 57600;
+          break;
+          case 5:
+            baud = 115200;
+          break;
+          default:
+            baud = 4800;
+            break;
+        };
+
+	eMBErrorCode eStatus = eMBMasterInit(MB_RTU, user_setting.slave_id, baud, MB_PAR_NONE);
 
 	if (eStatus == MB_ENOERR) {
 		eStatus = eMBMasterEnable();
 	}
 
 	for (;;) {
-		vTaskDelay(1);
+		osDelay(100);
 		eMBMasterPoll();
 	}
 }
@@ -60,16 +97,16 @@ void thread_entry_Simulation(void const * argument) {
 	eMBMasterReqErrCode errorCode = MB_MRE_NO_ERR;
 	uint16_t errorCount = 0;
 
-	UCHAR ucSndAddr = 1;
-	USHORT usRegAddr = 0;
-	USHORT usNRegs = 6;
-	TickType_t tInterval = pdMS_TO_TICKS(1000);
+//	UCHAR ucSndAddr = 1;
+//	USHORT usRegAddr = 0;
+//	USHORT usNRegs = 6;
+        uint32_t tInterval = 1000;//	TickType_t tInterval = pdMS_TO_TICKS(1000);
 
 //	traceTASK_SWITCHED_IN()
 //	;
 
 	for (;;) {
-		vTaskDelay(tInterval);
+		osDelay(user_setting.interval); //vTaskDelay(tInterval);
 //		CpuUsageMajor = osGetCPUUsage();
 //		if (CpuUsageMajor > CpuUsageMinor) {
 //			CpuUsageMinor = CpuUsageMajor;
@@ -91,14 +128,17 @@ void thread_entry_Simulation(void const * argument) {
 //		errorCode = eMBMasterReqWriteMultipleCoils(1,3,5,ucModbusUserData,-1);
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
 //		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
-		errorCode = eMBMasterReqReadInputRegister(ucSndAddr, usRegAddr, usNRegs, 1000);
+//                while (eQueuedMasterEvent != EV_MASTER_READY)
+                  errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id, user_setting.reg_addr, user_setting.qty, 1000);
 //		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
 //		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
-//		errorCode = eMBMasterReqReadHoldingRegister(1,3,2,-1);
+//		while (eQueuedMasterEvent != EV_MASTER_READY)
+                  errorCode = eMBMasterReqReadHoldingRegister(7,0,5, 1000);
 //		errorCode = eMBMasterReqReadWriteMultipleHoldingRegister(1,3,2,usModbusUserData,5,2,-1);
 
 		if (errorCode != MB_MRE_NO_ERR) {
 			errorCount++;
+                        errorCode = MB_MRE_NO_ERR;
 		} 
 //                else 
 //                {

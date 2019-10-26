@@ -136,7 +136,7 @@ eMBErrorCode
 eMBMasterInit( eMBMode eMode, UCHAR ucPort, ULONG ulBaudRate, eMBParity eParity )
 {
     eMBErrorCode    eStatus = MB_ENOERR;
-
+        
 	switch (eMode)
 	{
 #if MB_MASTER_RTU_ENABLED > 0

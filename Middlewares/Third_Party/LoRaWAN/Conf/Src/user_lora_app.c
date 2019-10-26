@@ -182,7 +182,7 @@ void thread_entry_LoRaPoll(void const * argument)
 
   for(;;)
   {
-	  vTaskDelay(1);
+	  osDelay(10);
 //	if(xTimeServerRunResTake(portMAX_DELAY) == pdPASS)
 //	if ( xMBMasterRunResTake( portMAX_DELAY ) == pdPASS )
 	{
@@ -204,21 +204,21 @@ void thread_entry_LoRaPoll(void const * argument)
 		}
 		/*If a flag is set at this point, mcu must not enter low power and must loop*/
 //	    DISABLE_IRQ( );
-	    CRITICAL_SECTION_BEGIN( );
+//	    CRITICAL_SECTION_BEGIN( );
 //
 //	    /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending
 //	     * and cortex will not enter low power anyway  */
-	    if ((LoraMacProcessRequest!=LORA_SET) && (AppProcessRequest!=LORA_SET))
-	    {
+//	    if ((LoraMacProcessRequest!=LORA_SET) && (AppProcessRequest!=LORA_SET))
+//	    {
 //	#ifndef LOW_POWER_DISABLE
 //	      LPM_EnterLowPower( );
 //	#endif
 //	    	vTimeServerRunResRelease();
 //	    	vMBMasterRunResRelease( );
-	    }
+//	    }
 //
 //	    ENABLE_IRQ();
-	    CRITICAL_SECTION_END( );
+//	    CRITICAL_SECTION_END( );
 
 	}
     /* USER CODE BEGIN 2 */

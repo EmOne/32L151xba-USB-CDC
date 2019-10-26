@@ -18,7 +18,10 @@
  *
  * File: $Id: user_mb_app_m.c,v 1.60 2013/11/23 11:49:05 Armink $
  */
+#include <string.h>
 #include "user_mb_app.h"
+
+setting_t user_setting = { 1, 0, 10, 1, 1000};
 
 /*-----------------------Master mode use these variables----------------------*/
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
@@ -144,6 +147,15 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress,
                 iRegIndex++;
                 usNRegs--;
             }
+
+            //TODO: Validate User settings
+            if(eMBMasterValidUserSetting(ucMBMasterGetDestAddress(),(uint8_t *) pusRegHoldingBuf) == FALSE) {
+              
+              memcpy((uint8_t *) &user_setting, (uint8_t *) pusRegHoldingBuf, sizeof(setting_t));
+              //TODO: Write new User settings
+              eMBMasterWriteUserSetting((uint8_t *) &user_setting);
+            }
+
             break;
         }
     }
@@ -291,4 +303,20 @@ eMBErrorCode eMBMasterRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USH
 
     return eStatus;
 }
+
+uint8_t eMBMasterValidUserSetting(uint16_t reg,const uint8_t * setting_data)
+{
+  if(reg == 7)
+  {
+    if(memcmp(setting_data, (uint8_t *) &user_setting, sizeof(setting_t)) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+void eMBMasterWriteUserSetting(const uint8_t * setting_data)
+{
+  EepromMcuWriteBuffer(USER_SETTING_EEPROM_BASE, setting_data, sizeof (setting_t) );
+}
+
 #endif

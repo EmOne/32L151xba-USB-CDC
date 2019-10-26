@@ -6,6 +6,7 @@
 #include "mbconfig.h"
 #include "mbframe.h"
 #include "mbutils.h"
+#include "eeprom-board.h"
 
 /* -----------------------Slave Defines -------------------------------------*/
 #define S_DISCRETE_INPUT_START        0
@@ -35,7 +36,7 @@
 #define M_REG_INPUT_START             0
 #define M_REG_INPUT_NREGS             10//100
 #define M_REG_HOLDING_START           0
-#define M_REG_HOLDING_NREGS           10//100
+#define M_REG_HOLDING_NREGS           5//100
 /* master mode: holding register's all address */
 #define          M_HD_RESERVE                     0
 /* master mode: input register's all address */
@@ -46,4 +47,20 @@
 #define          M_DI_RESERVE                     0
 extern USHORT   usMRegInBuf[][M_REG_INPUT_NREGS];
 extern eMBMasterEventType eQueuedMasterEvent;
+
+typedef struct {
+  uint16_t slave_id;
+  uint16_t reg_addr;
+  uint16_t qty;
+  uint16_t baudrate;
+  uint16_t interval;
+} setting_t;
+
+extern setting_t user_setting;
+
+#define USER_SETTING_EEPROM_BASE 0x100
+
+uint8_t eMBMasterValidUserSetting(uint16_t reg, const uint8_t * setting_data);
+void eMBMasterWriteUserSetting(const uint8_t * setting_data);
+            
 #endif

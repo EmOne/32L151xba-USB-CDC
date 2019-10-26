@@ -290,7 +290,7 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
             xBitsToWaitFor,
 			pdTRUE,
 			pdFALSE,
-			portMAX_DELAY);
+			10000);
     if (recvedEvent) {
 
 	}
