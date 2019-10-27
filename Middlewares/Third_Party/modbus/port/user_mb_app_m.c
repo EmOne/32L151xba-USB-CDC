@@ -148,7 +148,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress,
                 iRegIndex++;
                 usNRegs--;
             }
-
+CRITICAL_SECTION_BEGIN( );
             //TODO: Validate User settings
             if(eMBMasterValidUserSetting(ucMBMasterGetDestAddress(),(uint8_t *) pusRegHoldingBuf) == FALSE) {
               
@@ -158,9 +158,11 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress,
               eMBMasterNormalizeUserSetting(&user_setting);
 
               //TODO: Write new User settings
-              eMBMasterWriteUserSetting((uint8_t *) &user_setting);
-            }
 
+              eMBMasterWriteUserSetting((uint8_t *) &user_setting);
+
+            }
+CRITICAL_SECTION_END( );
             break;
         }
     }

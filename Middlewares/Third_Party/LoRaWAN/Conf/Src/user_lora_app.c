@@ -62,7 +62,7 @@
 /*!
  * LoRaWAN default endNode class port
  */
-#define LORAWAN_DEFAULT_CLASS                       CLASS_C
+#define LORAWAN_DEFAULT_CLASS                       CLASS_A
 /*!
  * LoRaWAN default confirm state
  */

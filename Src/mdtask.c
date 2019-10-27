@@ -12,9 +12,10 @@
 //UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
 extern LoraFlagStatus AppProcessRequest;
 //extern eMBMasterEventType eQueuedMasterEvent;
-
+#ifdef USE_LORA_HAL_DRIVER
 extern osThreadId mLoraTaskHandle;
-extern IWDG_HandleTypeDef hiwdg;
+//extern void thread_LoRaPoll(void const * argument);
+#endif
 
 __ALIGNED(portBYTE_ALIGNMENT)
 #if MB_SLAVE_RTU_ENABLED > 0 || MB_SLAVE_ASCII_ENABLED > 0
@@ -97,17 +98,17 @@ void thread_Simulation(void const * argument) {
 //	UCHAR ucSndAddr = 1;
 //	USHORT usRegAddr = 0;
 //	USHORT usNRegs = 6;
-        uint32_t tInterval = 1000;//	TickType_t tInterval = pdMS_TO_TICKS(1000);
+	uint32_t tInterval = 1000;//	TickType_t tInterval = pdMS_TO_TICKS(1000);
 
 //	traceTASK_SWITCHED_IN()
 //	;
 
 	for (;;) {
 		osDelay(user_setting.interval); //vTaskDelay(tInterval);
-//		CpuUsageMajor = osGetCPUUsage();
-//		if (CpuUsageMajor > CpuUsageMinor) {
-//			CpuUsageMinor = CpuUsageMajor;
-//		}
+		CpuUsageMajor = osGetCPUUsage();
+		if (CpuUsageMajor > CpuUsageMinor) {
+			CpuUsageMinor = CpuUsageMajor;
+		}
 //		usSRegHoldBuf[S_HD_CPU_USAGE_MAJOR] = CpuUsageMajor;
 //		usSRegHoldBuf[S_HD_CPU_USAGE_MINOR] = CpuUsageMinor;
 //		LED_LED1_ON;
@@ -128,7 +129,7 @@ void thread_Simulation(void const * argument) {
 //                while (eQueuedMasterEvent != EV_MASTER_READY)
 		errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id,
 				user_setting.reg_addr, user_setting.qty, tInterval);
-		if (errorCode == MB_MRE_NO_ERR && AppProcessRequest == LORA_RESET) {
+		if (errorCode == MB_MRE_NO_ERR) {
 			AppProcessRequest = LORA_SET;
 			vTaskResume(mLoraTaskHandle);
 		}
