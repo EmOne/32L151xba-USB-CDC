@@ -147,7 +147,7 @@ void thread_Simulation(void const * argument) {
 ////			CDC_Transmit_FS((uint8_t *) &usMRegInBuf[ucSndAddr - 1][0], usNRegs);
 //			PRINTF("Temp=%d\r\n", usMRegInBuf[ucSndAddr - 1][0]);
 //		}
-		HAL_IWDG_Refresh(&hiwdg);
+
 	}
 }
 #endif

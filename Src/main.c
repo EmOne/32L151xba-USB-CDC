@@ -63,7 +63,7 @@ IWDG_HandleTypeDef hiwdg;
 
 //WWDG_HandleTypeDef hwwdg;
 
-//osThreadId defaultTaskHandle;
+osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 osThreadId simulateTaskHandle;
@@ -95,7 +95,7 @@ static void MX_TIM7_Init(void);
 //static void MX_ADC_Init(void);
 static void MX_IWDG_Init(void);
 //static void MX_WWDG_Init(void);
-//void StartDefaultTask(void const * argument);
+void StartDefaultTask(void const * argument);
 
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
@@ -171,8 +171,8 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-//  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
-//  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -643,20 +643,21 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-//void StartDefaultTask(void const * argument)
-//{
-//  /* init code for USB_DEVICE */
-////  MX_USB_DEVICE_Init();
-//
-//  /* USER CODE BEGIN 5 */
-//
-//  /* Infinite loop */
-//  for(;;)
-//  {
-//	  osDelay(1);
-//  }
-//  /* USER CODE END 5 */
-//}
+void StartDefaultTask(void const * argument)
+{
+  /* init code for USB_DEVICE */
+//  MX_USB_DEVICE_Init();
+
+  /* USER CODE BEGIN 5 */
+
+  /* Infinite loop */
+  for(;;)
+  {
+	  osDelay(1000);
+	  HAL_IWDG_Refresh(&hiwdg);
+  }
+  /* USER CODE END 5 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

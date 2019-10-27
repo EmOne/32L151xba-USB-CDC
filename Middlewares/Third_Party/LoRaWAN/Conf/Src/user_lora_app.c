@@ -25,7 +25,7 @@
 #include "timeServer.h"
 #include "vcom.h"
 #include "version.h"
-
+#include "utilities.h"
 #include "user_mb_app.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -62,7 +62,7 @@
 /*!
  * LoRaWAN default endNode class port
  */
-#define LORAWAN_DEFAULT_CLASS                       CLASS_A
+#define LORAWAN_DEFAULT_CLASS                       CLASS_C
 /*!
  * LoRaWAN default confirm state
  */
@@ -70,7 +70,7 @@
 /*!
  * User application data buffer size
  */
-#define LORAWAN_APP_DATA_BUFF_SIZE                           64
+#define LORAWAN_APP_DATA_BUFF_SIZE                           242
 /*!
  * User application data
  */
@@ -261,13 +261,13 @@ static void Send( void* context )
   TVL1(PRINTF("SEND REQUEST\n\r"););
  
 //  batteryLevel = HW_GetBatteryLevel( );                     /* 1 (very low) to 254 (fully charged) */
-  AppData.Buff[i++] = AppLedStateOn;
+  AppData.Buff[i++] = (uint8_t ) user_setting.slave_id;
   AppData.Buff[i++] = HW_GetBatteryLevel( );
 //  AppData.Buff[i++] = HW_GetTemperatureLevel();
-  AppData.Buff[i++] = eQueuedMasterEvent;
+  AppData.Buff[i++] = (uint8_t ) user_setting.reg_addr;
   len = sizeof(USHORT) * user_setting.qty;
   AppData.Buff[i++] = len;
-  memcpy(AppData.Buff + i, &usMRegInBuf[user_setting.slave_id - 1], len);
+  memcpy1(AppData.Buff + i, &usMRegInBuf[user_setting.slave_id - 1], len);
   i += len;
 
   AppData.BuffSize = i;
