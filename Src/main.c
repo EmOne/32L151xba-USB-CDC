@@ -59,6 +59,10 @@ TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart1;
 
+IWDG_HandleTypeDef hiwdg;
+
+//WWDG_HandleTypeDef hwwdg;
+
 //osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
@@ -82,12 +86,15 @@ uint16_t CpuUsageMinor;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM7_Init(void);
 //static void MX_RTC_Init(void);
 //static void MX_SPI1_Init(void);
 //static void MX_ADC_Init(void);
+static void MX_IWDG_Init(void);
+//static void MX_WWDG_Init(void);
 //void StartDefaultTask(void const * argument);
 
 static void MX_NVIC_Init(void);
@@ -139,7 +146,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM7_Init();
-
+  MX_IWDG_Init();
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
@@ -421,6 +428,62 @@ static void MX_NVIC_Init(void)
 //  /* USER CODE END SPI1_Init 2 */
 //
 //}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+	/*##-2- Init & Start WWDG peripheral ######################################*/
+	  /* WWDG clock counter = (PCLK1 (32MHz)/4096)/8) = 976 Hz (~1024 us)
+	     WWDG Window value = 80 means that the WWDG counter should be refreshed only
+	     when the counter is below 80 (and greater than 64/0x40) otherwise a reset will
+	     be generated.
+	     WWDG Counter value = 127, WWDG timeout = ~1024 us * 64 = 65.57 ms
+	     In this case the refresh window is comprised between : ~1024 * (127-80) = 48.1ms and ~1024 * 64 = 65.53ms
+	   */
+		hiwdg.Instance = IWDG;
+		hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+		hiwdg.Init.Reload    = 0xFFF;
+
+	  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+	  {
+	    /* Initialization Error */
+	    Error_Handler();
+	  }
+
+}
+
+///**
+//  * @brief WWDG Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+//static void MX_WWDG_Init(void) {
+//	/*##-2- Init & Start WWDG peripheral ######################################*/
+//	/* WWDG clock counter = (PCLK1 (32MHz)/4096)/8) = 976 Hz (~1024 us)
+//	 WWDG Window value = 80 means that the WWDG counter should be refreshed only
+//	 when the counter is below 80 (and greater than 64/0x40) otherwise a reset will
+//	 be generated.
+//	 WWDG Counter value = 127, WWDG timeout = ~1024 us * 64 = 65.57 ms
+//	 In this case the refresh window is comprised between : ~1024 * (127-80) = 48.1ms and ~1024 * 64 = 65.53ms
+//	 */
+//
+//	hwwdg.Instance = WWDG;
+//	hwwdg.Init.Prescaler = WWDG_PRESCALER_8;
+//	hwwdg.Init.Window = 0x7F;
+//	hwwdg.Init.Counter = 0x7F;
+//	hwwdg.Init.EWIMode = WWDG_EWI_DISABLE;
+//
+//	if (HAL_WWDG_Init(&hwwdg) != HAL_OK) {
+//		/* Initialization Error */
+//		Error_Handler();
+//	}
+//
+//}
+
 
 /**
   * @brief TIM7 Initialization Function
