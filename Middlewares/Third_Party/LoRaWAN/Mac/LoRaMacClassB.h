@@ -227,7 +227,7 @@ typedef struct sLoRaMacClassBCallback
      *
      * \retval  Temperature level
      */
-    uint16_t ( *GetTemperatureLevel )( void );
+    float ( *GetTemperatureLevel )( void );
     /*!
      *\brief    Will be called each time a Radio IRQ is handled by the MAC
      *          layer.

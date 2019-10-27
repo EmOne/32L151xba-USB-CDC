@@ -20,6 +20,7 @@
  */
 #include <string.h>
 #include "user_mb_app.h"
+#include "utilities.h"
 
 setting_t user_setting = { 1, 0, 10, 1, 1000};
 
@@ -151,7 +152,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress,
             //TODO: Validate User settings
             if(eMBMasterValidUserSetting(ucMBMasterGetDestAddress(),(uint8_t *) pusRegHoldingBuf) == FALSE) {
               
-              memcpy((uint8_t *) &user_setting, (uint8_t *) pusRegHoldingBuf, sizeof(setting_t));
+              memcpy1((uint8_t *) &user_setting, (uint8_t *) pusRegHoldingBuf, sizeof(setting_t));
 
               //Normalized
               eMBMasterNormalizeUserSetting(&user_setting);

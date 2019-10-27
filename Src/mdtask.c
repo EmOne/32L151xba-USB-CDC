@@ -5,18 +5,20 @@
 #include "mbport.h"
 #include "user_mb_app.h"
 #include "cpu_utils.h"
-//#include "util_console.h"
+#include "util_console.h"
 //#include "usbd_cdc_if.h"
 #include "lora.h"
 //USHORT usModbusUserData[MB_PDU_SIZE_MAX];
 //UCHAR ucModbusUserData[MB_PDU_SIZE_MAX];
 extern LoraFlagStatus AppProcessRequest;
-extern eMBMasterEventType eQueuedMasterEvent;
+//extern eMBMasterEventType eQueuedMasterEvent;
+
+extern osThreadId mLoraTaskHandle;
 
 __ALIGNED(portBYTE_ALIGNMENT)
 #if MB_SLAVE_RTU_ENABLED > 0 || MB_SLAVE_ASCII_ENABLED > 0
 extern USHORT usSRegInBuf[];
-void thread_entry_ModbusSlavePoll(void const * argument)
+void thread_ModbusSlavePoll(void const * argument)
 {
 //  /* ABCDEF */
 	usSRegInBuf[0] = 11;
@@ -42,7 +44,7 @@ void thread_entry_ModbusSlavePoll(void const * argument)
 #endif
 
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
-void thread_entry_ModbusMasterPoll(void const * argument) {
+void thread_ModbusMasterPoll(void const * argument) {
 //	traceTASK_SWITCHED_IN()
 //	;
         static uint32_t baud = 4800;
@@ -87,7 +89,7 @@ void thread_entry_ModbusMasterPoll(void const * argument) {
 	}
 }
 
-void thread_entry_Simulation(void const * argument) {
+void thread_Simulation(void const * argument) {
 	eMBMasterReqErrCode errorCode = MB_MRE_NO_ERR;
 	uint16_t errorCount = 0;
 
@@ -123,13 +125,16 @@ void thread_entry_Simulation(void const * argument) {
 //		errorCode = eMBMasterReqWriteCoil(1,8,0xFF00,-1);
 //		errorCode = eMBMasterReqReadCoils(1,3,8,-1);
 //                while (eQueuedMasterEvent != EV_MASTER_READY)
-                errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id, user_setting.reg_addr, user_setting.qty, tInterval);
-                if(errorCode == MB_MRE_NO_ERR && AppProcessRequest == LORA_RESET)
-                  AppProcessRequest = LORA_SET;
+		errorCode = eMBMasterReqReadInputRegister(user_setting.slave_id,
+				user_setting.reg_addr, user_setting.qty, tInterval);
+		if (errorCode == MB_MRE_NO_ERR && AppProcessRequest == LORA_RESET) {
+			AppProcessRequest = LORA_SET;
+			vTaskResume(mLoraTaskHandle);
+		}
 //		errorCode = eMBMasterReqWriteHoldingRegister(1,3,usModbusUserData[0],-1);
 //		errorCode = eMBMasterReqWriteMultipleHoldingRegister(1,3,2,usModbusUserData,-1);
 //		while (eQueuedMasterEvent != EV_MASTER_READY)
-                errorCode = eMBMasterReqReadHoldingRegister(7,0,5, tInterval);
+		errorCode = eMBMasterReqReadHoldingRegister(7,0,5, tInterval);
 //		errorCode = eMBMasterReqReadWriteMultipleHoldingRegister(1,3,2,usModbusUserData,5,2,-1);
 
 		if (errorCode != MB_MRE_NO_ERR) {

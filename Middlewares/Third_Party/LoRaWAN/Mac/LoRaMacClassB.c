@@ -178,7 +178,7 @@ static LoRaMacClassBNvmCtx_t NvmCtx;
 /*
  * Module context.
  */
-/*static*/ LoRaMacClassBCtx_t Ctx;
+static LoRaMacClassBCtx_t Ctx;
 
 /*!
  * Computes the Ping Offset
@@ -434,7 +434,7 @@ static void GetTemperatureLevel( LoRaMacClassBCallback_t *callbacks, BeaconConte
     // Measure temperature, if available
     if( ( callbacks != NULL ) && ( callbacks->GetTemperatureLevel != NULL ) )
     {
-        beaconCtx->Temperature = (float) callbacks->GetTemperatureLevel( );
+        beaconCtx->Temperature = callbacks->GetTemperatureLevel( );
     }
 }
 
@@ -1543,8 +1543,7 @@ uint8_t LoRaMacClassBPingSlotChannelReq( uint8_t datarate, uint32_t frequency )
     if( frequency != 0 )
     {
         isCustomFreq = true;
-        verify.Frequency = frequency;
-        if( RegionVerify( *Ctx.LoRaMacClassBParams.LoRaMacRegion, &verify, PHY_FREQUENCY ) == false )
+        if( Radio.CheckRfFrequency( frequency ) == false )
         {
             status &= 0xFE; // Channel frequency KO
         }
@@ -1648,13 +1647,9 @@ void LoRaMacClassBDeviceTimeAns( void )
 bool LoRaMacClassBBeaconFreqReq( uint32_t frequency )
 {
 #ifdef LORAMAC_CLASSB_ENABLED
-    VerifyParams_t verify;
-
     if( frequency != 0 )
     {
-        verify.Frequency = frequency;
-
-        if( RegionVerify( *Ctx.LoRaMacClassBParams.LoRaMacRegion, &verify, PHY_FREQUENCY ) == true )
+        if( Radio.CheckRfFrequency( frequency ) == true )
         {
             Ctx.NvmCtx->BeaconCtx.Ctrl.CustomFreq = 1;
             Ctx.NvmCtx->BeaconCtx.Frequency = frequency;

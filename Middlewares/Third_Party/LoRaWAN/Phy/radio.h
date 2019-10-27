@@ -110,9 +110,8 @@ struct Radio_s
      * \brief Initializes the radio
      *
      * \param [IN] events Structure containing the driver callback functions
-     * \param [OUT] returns radioWakeUpTime
      */
-    uint32_t    ( *Init )( RadioEvents_t *events );
+    void    ( *Init )( RadioEvents_t *events );
     /*!
      * Return current radio status
      *

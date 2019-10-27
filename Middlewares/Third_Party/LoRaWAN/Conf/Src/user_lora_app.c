@@ -150,7 +150,7 @@ static  LoRaParam_t LoRaParamInit= {LORAWAN_ADR_STATE,
   * @param  None
   * @retval None
   */
-void thread_entry_LoRaPoll(void const * argument)
+void thread_LoRaPoll(void const * argument)
 {
 //	traceTASK_SWITCHED_IN()
 //	;
@@ -216,6 +216,8 @@ void thread_entry_LoRaPoll(void const * argument)
 //	#endif
 //	    	vTimeServerRunResRelease();
 //	    	vMBMasterRunResRelease( );
+	    	vTaskSuspend( NULL );
+
 	    }
 //
 //	    ENABLE_IRQ();
@@ -247,7 +249,7 @@ static void Send( void* context )
   /* USER CODE BEGIN 3 */
   uint8_t len = 0; 
   uint32_t i = 0;
-  uint8_t batteryLevel;
+//  uint8_t batteryLevel;
   
   if ( LORA_JoinStatus () != LORA_SET)
   {

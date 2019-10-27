@@ -35,6 +35,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 /* Includes ------------------------------------------------------------------*/
 #include "hw.h"
 
+extern osThreadId mLoraTaskHandle;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -117,6 +118,7 @@ void HW_GPIO_IrqHandler( uint16_t GPIO_Pin )
 	ulMask = taskENTER_CRITICAL_FROM_ISR();
     GpioIrq[ BitPos ] ( NULL );
     taskEXIT_CRITICAL_FROM_ISR(ulMask);
+    xTaskResumeFromISR(mLoraTaskHandle);
   }
 }
 

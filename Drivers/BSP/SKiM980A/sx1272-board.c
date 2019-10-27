@@ -1,7 +1,7 @@
 /*!
- * \file      sx1272mb2das-board.c
+ * \file      sx1272-board.c
  *
- * \brief     Target board SX1272MB2DAS shield driver implementation
+ * \brief     Target board SX1272 driver implementation
  *
  * \copyright Revised BSD License, see section \ref LICENSE.
  *
@@ -20,37 +20,23 @@
  *
  * \author    Gregory Cristian ( Semtech )
  */
-/**
-  ******************************************************************************
-  * @file    sx1272mb2das.c
-  * @author  MCD Application Team
-  * @brief   driver sx1272mb2das board 
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
-/* Includes ------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "hw.h"
 #include "radio.h"
 #include "sx1272.h"
-#include "sx1272mb2das.h"
-
+#include "sx1272-board.h"
+#include "utilities.h"
 
 #define IRQ_HIGH_PRIORITY  5
 
 /*!
- * Flag used to set the RF switch control pins in low power mode when the radio is not active.
+ * \brief Gets the board PA selection configuration
+ *
+ * \param [IN] channel Channel frequency in Hz
+ * \retval PaSelect RegPaConfig PaSelect value
  */
+static uint8_t SX1272GetPaSelect( uint32_t channel );
+
 /*!
  * Flag used to set the RF switch control pins in low power mode when the radio is not active.
  */
@@ -59,35 +45,6 @@ static bool RadioIsActive = false;
 void SX1272SetXO( uint8_t state );
 
 uint32_t SX1272GetWakeTime( void );
-
-void SX1272IoIrqInit( DioIrqHandler **irqHandlers );
-
-uint8_t SX1272GetPaSelect( uint32_t channel );
-
-void SX1272SetAntSwLowPower( bool status );
-
-void SX1272SetRfTxPower( int8_t power );
-
-/*!
- * \brief Controls the antenna switch if necessary.
- *
- * \remark see errata note
- *
- * \param [IN] opMode Current radio operating mode
- */
-void SX1272SetAntSw( uint8_t opMode );
-
-/*!
- * \brief Initializes the RF Switch I/Os pins interface
- */
-void SX1272AntSwInit( void );
-
-/*!
- * \brief De-initializes the RF Switch I/Os pins interface
- *
- * \remark Needed to decrease the power consumption in MCU low power modes
- */
-void SX1272AntSwDeInit( void );
 
 static LoRaBoardCallback_t BoardCallbacks = { SX1272SetXO,
                                               SX1272GetWakeTime,
@@ -101,8 +58,8 @@ static LoRaBoardCallback_t BoardCallbacks = { SX1272SetXO,
  */
 const struct Radio_s Radio =
 {
-    SX1272IoInit,
-    SX1272IoDeInit,
+	SX1272IoInit,
+	SX1272IoDeInit,
     SX1272Init,
     SX1272GetStatus,
     SX1272SetModem,
@@ -126,8 +83,48 @@ const struct Radio_s Radio =
     SX1272ReadBuffer,
     SX1272SetMaxPayloadLength,
     SX1272SetPublicNetwork,
-    SX1272GetWakeupTime
+    SX1272GetWakeupTime,
+    NULL, // void ( *IrqProcess )( void )
+    NULL, // void ( *RxBoosted )( uint32_t timeout ) - SX126x Only
+    NULL, // void ( *SetRxDutyCycle )( uint32_t rxTime, uint32_t sleepTime ) - SX126x Only
 };
+
+
+void SX1272Reset( void )
+{
+    GPIO_InitTypeDef initStruct = { 0 };
+
+    initStruct.Mode =GPIO_MODE_OUTPUT_PP;
+    initStruct.Pull = GPIO_NOPULL;
+    initStruct.Speed = GPIO_SPEED_HIGH;
+
+    // Set RESET pin to 1
+    HW_GPIO_Init( RADIO_RESET_PORT, RADIO_RESET_PIN, &initStruct );
+    HW_GPIO_Write( RADIO_RESET_PORT, RADIO_RESET_PIN, 1 );
+
+    // Wait 1 ms
+    DelayMs( 1 );
+
+    // Configure RESET as input
+    initStruct.Mode = GPIO_NOPULL;
+    HW_GPIO_Init( RADIO_RESET_PORT, RADIO_RESET_PIN, &initStruct );
+
+    // Wait 6 ms
+    DelayMs( 6 );
+}
+/*!
+ * Antenna switch GPIO pins objects
+ */
+//Gpio_t AntTx;
+//Gpio_t AntRx;
+
+/*!
+ * Debug GPIO pins objects
+ */
+#if defined( USE_RADIO_DEBUG )
+Gpio_t DbgPinTx;
+Gpio_t DbgPinRx;
+#endif
 
 uint32_t SX1272GetWakeTime( void )
 {
@@ -140,40 +137,74 @@ void SX1272SetXO( uint8_t state )
 
 void SX1272IoInit( void )
 {
-  GPIO_InitTypeDef initStruct={0};
-  
-  SX1272BoardInit( &BoardCallbacks );
-  
-  initStruct.Mode = GPIO_MODE_IT_RISING;
-  initStruct.Pull = GPIO_PULLDOWN;
-  initStruct.Speed = GPIO_SPEED_HIGH;
+	GPIO_InitTypeDef initStruct={0};
 
-  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
+	  SX1272BoardInit( &BoardCallbacks );
+
+	  initStruct.Mode = GPIO_MODE_IT_RISING;
+	  initStruct.Pull = GPIO_PULLDOWN;
+	  initStruct.Speed = GPIO_SPEED_HIGH;
+
+	  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
 }
 
 void SX1272IoIrqInit( DioIrqHandler **irqHandlers )
 {
-  HW_GPIO_SetIrq( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, IRQ_HIGH_PRIORITY, irqHandlers[0] );
-  HW_GPIO_SetIrq( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, IRQ_HIGH_PRIORITY, irqHandlers[1] );
-  HW_GPIO_SetIrq( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, IRQ_HIGH_PRIORITY, irqHandlers[2] );
-  HW_GPIO_SetIrq( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, IRQ_HIGH_PRIORITY, irqHandlers[3] );
+	HW_GPIO_SetIrq( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, IRQ_HIGH_PRIORITY, irqHandlers[0] );
+	  HW_GPIO_SetIrq( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, IRQ_HIGH_PRIORITY, irqHandlers[1] );
+	  HW_GPIO_SetIrq( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, IRQ_HIGH_PRIORITY, irqHandlers[2] );
+	  HW_GPIO_SetIrq( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, IRQ_HIGH_PRIORITY, irqHandlers[3] );
 }
 
 void SX1272IoDeInit( void )
 {
-  GPIO_InitTypeDef initStruct={0};
+	GPIO_InitTypeDef initStruct={0};
 
-  initStruct.Mode = GPIO_MODE_IT_RISING ;//GPIO_MODE_ANALOG;
-  initStruct.Pull = GPIO_PULLDOWN;
-  
-  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
+	  initStruct.Mode = GPIO_MODE_IT_RISING ;//GPIO_MODE_ANALOG;
+	  initStruct.Pull = GPIO_PULLDOWN;
+
+	  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
+	  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
 }
+
+void SX1272IoDbgInit( void )
+{
+#if defined( USE_RADIO_DEBUG )
+    GpioInit( &DbgPinTx, RADIO_DBG_PIN_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+    GpioInit( &DbgPinRx, RADIO_DBG_PIN_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+#endif
+}
+
+void SX1272IoTcxoInit( void )
+{
+    // No TCXO component available on this board design.
+}
+
+void SX1272SetBoardTcxo( uint8_t state )
+{
+    // No TCXO component available on this board design.
+#if 0
+    if( state == true )
+    {
+        TCXO_ON( );
+        DelayMs( BOARD_TCXO_WAKEUP_TIME );
+    }
+    else
+    {
+        TCXO_OFF( );
+    }
+#endif
+}
+
+//uint32_t SX1272GetBoardTcxoWakeupTime( void )
+//{
+//    return BOARD_TCXO_WAKEUP_TIME;
+//}
 
 void SX1272SetRfTxPower( int8_t power )
 {
@@ -236,39 +267,42 @@ void SX1272SetRfTxPower( int8_t power )
     SX1272Write( REG_PADAC, paDac );
 }
 
-uint8_t SX1272GetPaSelect( uint32_t channel )
+static uint8_t SX1272GetPaSelect( uint32_t channel )
 {
-    return RF_PACONFIG_PASELECT_RFO;
+    return RF_PACONFIG_PASELECT_PABOOST;
 }
 
 void SX1272SetAntSwLowPower( bool status )
 {
-  //Ant Switch Controlled by SX1272 IC
-	if (RadioIsActive != status) {
-		RadioIsActive = status;
+    if( RadioIsActive != status )
+    {
+        RadioIsActive = status;
 
-		if (status == false) {
-			SX1272AntSwInit();
-		} else {
-			SX1272AntSwDeInit();
-		}
-	}
+        if( status == false )
+        {
+            SX1272AntSwInit( );
+        }
+        else
+        {
+            SX1272AntSwDeInit( );
+        }
+    }
 }
 
 void SX1272AntSwInit( void )
 {
 	GPIO_InitTypeDef initStruct = { 0 };
 
-	initStruct.Pull = GPIO_PULLUP;
-	initStruct.Speed = GPIO_SPEED_HIGH;
-	initStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		initStruct.Pull = GPIO_PULLUP;
+		initStruct.Speed = GPIO_SPEED_HIGH;
+		initStruct.Mode = GPIO_MODE_OUTPUT_PP;
 
-	HW_GPIO_Init( RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin,
-			&initStruct);
-	HW_GPIO_Init( RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin,
-			&initStruct);
-	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_RESET);
-	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
+		HW_GPIO_Init( RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin,
+				&initStruct);
+		HW_GPIO_Init( RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin,
+				&initStruct);
+		HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_RESET);
+		HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
 //    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
 //    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
 }
@@ -295,16 +329,16 @@ void SX1272SetAntSw( uint8_t opMode )
     {
     case RFLR_OPMODE_TRANSMITTER:
     	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_SET);
-    	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_RESET);
-    	SX1272.RxTx = 1;
+		HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_RESET);
+		SX1272.RxTx = 1;
         break;
     case RFLR_OPMODE_RECEIVER:
     case RFLR_OPMODE_RECEIVER_SINGLE:
     case RFLR_OPMODE_CAD:
     default:
     	HW_GPIO_Write(RADIO_ANT_SWITCH_TX_GPIO_Port, RADIO_ANT_SWITCH_TX_Pin, GPIO_PIN_RESET);
-    	HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
-        SX1272.RxTx = 0;
+		HW_GPIO_Write(RADIO_ANT_SWITCH_RX_GPIO_Port, RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_SET);
+		SX1272.RxTx = 0;
         break;
     }
 }
@@ -314,4 +348,3 @@ bool SX1272CheckRfFrequency( uint32_t frequency )
     // Implement check. Currently all frequencies are supported
     return true;
 }
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

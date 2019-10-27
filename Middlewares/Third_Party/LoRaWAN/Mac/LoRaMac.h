@@ -2310,7 +2310,7 @@ typedef struct sLoRaMacCallback
      *
      * \retval  Temperature level
      */
-    uint16_t ( *GetTemperatureLevel )( void );
+    float ( *GetTemperatureLevel )( void );
     /*!
      * \brief   Will be called when an attribute has changed in one of the context.
      *

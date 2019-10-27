@@ -20,30 +20,14 @@
  *
  * \author    Gregory Cristian ( Semtech )
  */
-/**
-  ******************************************************************************
-  * @file    sx1272.c
-  * @author  MCD Application Team
-  * @brief   driver sx1272
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
+#include <math.h>
+#include <string.h>
 #include "hw.h"
 #include "radio.h"
 #include "sx1272.h"
+#include "sx1272-board.h"
 #include "timeServer.h"
-
+#include "utilities.h"
 /*
  * Local types definition
  */
@@ -238,7 +222,7 @@ void SX1272BoardInit( LoRaBoardCallback_t *callbacks )
     LoRaBoardCallbacks =callbacks;
 }
 
-uint32_t SX1272Init( RadioEvents_t *events )
+void SX1272Init( RadioEvents_t *events )
 {
     uint8_t i;
 
@@ -266,8 +250,6 @@ uint32_t SX1272Init( RadioEvents_t *events )
     SX1272SetModem( MODEM_FSK );
 
     SX1272.Settings.State = RF_IDLE;
-
-    return ( uint32_t )LoRaBoardCallbacks->SX1272BoardGetWakeTime( ) + RADIO_WAKEUP_TIME;// BOARD_WAKEUP_TIME;
 }
 
 RadioState_t SX1272GetStatus( void )
@@ -277,15 +259,11 @@ RadioState_t SX1272GetStatus( void )
 
 void SX1272SetChannel( uint32_t freq )
 {
-    uint32_t channel;
-
     SX1272.Settings.Channel = freq;
-
-    SX_FREQ_TO_CHANNEL( channel, freq );
-
-    SX1272Write( REG_FRFMSB, ( uint8_t )( ( channel >> 16 ) & 0xFF ) );
-    SX1272Write( REG_FRFMID, ( uint8_t )( ( channel >> 8 ) & 0xFF ) );
-    SX1272Write( REG_FRFLSB, ( uint8_t )( channel & 0xFF ) );
+    freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+    SX1272Write( REG_FRFMSB, ( uint8_t )( ( freq >> 16 ) & 0xFF ) );
+    SX1272Write( REG_FRFMID, ( uint8_t )( ( freq >> 8 ) & 0xFF ) );
+    SX1272Write( REG_FRFLSB, ( uint8_t )( freq & 0xFF ) );
 }
 
 bool SX1272IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime )
@@ -1056,31 +1034,26 @@ int16_t SX1272ReadRssi( RadioModems_t modem )
     return rssi;
 }
 
-void SX1272Reset( void )
-{
-    GPIO_InitTypeDef initStruct = { 0 };
-
-    initStruct.Mode =GPIO_MODE_OUTPUT_PP;
-    initStruct.Pull = GPIO_NOPULL;
-    initStruct.Speed = GPIO_SPEED_HIGH;
-
-    // Set RESET pin to 1
-    HW_GPIO_Init( RADIO_RESET_PORT, RADIO_RESET_PIN, &initStruct );
-    HW_GPIO_Write( RADIO_RESET_PORT, RADIO_RESET_PIN, 1 );
-
-    // Wait 1 ms
-    DelayMs( 1 );
-
-    // Configure RESET as input
-    initStruct.Mode = GPIO_NOPULL;
-    HW_GPIO_Init( RADIO_RESET_PORT, RADIO_RESET_PIN, &initStruct );
-
-    // Wait 6 ms
-    DelayMs( 6 );
-}
-
 void SX1272SetOpMode( uint8_t opMode )
 {
+#if defined( USE_RADIO_DEBUG )
+    switch( opMode )
+    {
+        case RF_OPMODE_TRANSMITTER:
+            SX1272DbgPinTxWrite( 1 );
+            SX1272DbgPinRxWrite( 0 );
+            break;
+        case RF_OPMODE_RECEIVER:
+        case RFLR_OPMODE_RECEIVER_SINGLE:
+            SX1272DbgPinTxWrite( 0 );
+            SX1272DbgPinRxWrite( 1 );
+            break;
+        default:
+            SX1272DbgPinTxWrite( 0 );
+            SX1272DbgPinRxWrite( 0 );
+            break;
+    }
+#endif
     if( opMode == RF_OPMODE_SLEEP )
     {
         LoRaBoardCallbacks->SX1272BoardSetAntSwLowPower( true );
@@ -1562,8 +1535,6 @@ void SX1272OnDio1Irq( void* context )
 
 void SX1272OnDio2Irq( void* context )
 {
-    uint32_t afcChannel = 0;
-
     switch( SX1272.Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1583,11 +1554,9 @@ void SX1272OnDio2Irq( void* context )
 
                     SX1272.Settings.FskPacketHandler.RssiValue = -( SX1272Read( REG_RSSIVALUE ) >> 1 );
 
-                    afcChannel = ( ( ( uint16_t )SX1272Read( REG_AFCMSB ) << 8 ) |
-                                     ( uint16_t )SX1272Read( REG_AFCLSB ) );
-
-                    SX_CHANNEL_TO_FREQ( afcChannel, SX1272.Settings.FskPacketHandler.AfcValue );
-
+                    SX1272.Settings.FskPacketHandler.AfcValue = ( int32_t )( double )( ( ( uint16_t )SX1272Read( REG_AFCMSB ) << 8 ) |
+                                                                           ( uint16_t )SX1272Read( REG_AFCLSB ) ) *
+                                                                           ( double )FREQ_STEP;
                     SX1272.Settings.FskPacketHandler.RxGain = ( SX1272Read( REG_LNA ) >> 5 ) & 0x07;
                 }
                 break;
@@ -1695,4 +1664,3 @@ void SX1272OnDio5Irq( void* context )
         break;
     }
 }
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
